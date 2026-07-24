@@ -3,481 +3,408 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Filmopolis — filmový a seriálový denník</title>
+<title>FILMOPOLIS — filmový a seriálový denník</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#12151c;
-    --ink-2:#1b202b;
-    --paper:#f2ece0;
-    --paper-dim:#e4dcc9;
-    --gold:#e3b04b;
-    --gold-dim:#a9812f;
-    --velvet:#9c2b36;
-    --teal:#3f7d78;
-    --muted:#8b8677;
-    --line: rgba(242,236,224,0.14);
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    background:var(--ink);
-    color:var(--paper);
-    font-family:'Source Serif 4', serif;
-    min-height:100vh;
-    position:relative;
-  }
-  ::selection{background:var(--gold);color:var(--ink);}
-
-  .perf{
-    height:14px;
-    background-image:
-      radial-gradient(circle at 10px 7px, var(--ink) 4px, transparent 4.5px);
-    background-size:24px 14px;
-    background-repeat:repeat-x;
-    background-color:var(--gold-dim);
-  }
-  .perf.bottom{transform:scaleY(-1);}
-
-  header{
-    padding:56px 6vw 40px;
-    background:
-      radial-gradient(ellipse at 20% -10%, rgba(227,176,75,0.16), transparent 55%),
-      var(--ink-2);
-    border-bottom:1px solid var(--line);
-    position:relative;
-    overflow:hidden;
-  }
-  .eyebrow{
-    font-family:'IBM Plex Mono', monospace;
-    letter-spacing:.22em;
-    text-transform:uppercase;
-    font-size:.72rem;
-    color:var(--gold);
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-bottom:18px;
-  }
-  .eyebrow::before{
-    content:"";
-    width:7px;height:7px;border-radius:50%;
-    background:var(--velvet);
-    box-shadow:0 0 0 3px rgba(156,43,54,0.25);
-  }
-  h1{
-    font-family:'Bebas Neue', sans-serif;
-    font-weight:400;
-    font-size:clamp(3.2rem, 9vw, 6.4rem);
-    line-height:.92;
-    letter-spacing:.01em;
-    margin:0 0 6px;
-    color:var(--paper);
-    text-shadow: 0 0 34px rgba(227,176,75,0.18);
-  }
-  h1 span{color:var(--gold);}
-  .tagline{
-    font-size:1.05rem;
-    color:var(--muted);
-    max-width:46ch;
-    margin:10px 0 0;
-    font-style:italic;
+  :root {
+    --bg-main: #f2f4f7;
+    --card-bg: #ffffff;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --accent-blue: #007aff;
+    --accent-blue-hover: #006ee6;
+    --border-color: #e2e5e9;
+    --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    --radius: 16px;
   }
 
-  .stats{
-    display:flex;
-    gap:34px;
-    margin-top:34px;
-    flex-wrap:wrap;
-  }
-  .stat{ font-family:'IBM Plex Mono', monospace; }
-  .stat b{
-    display:block;
-    font-family:'Bebas Neue', sans-serif;
-    font-size:2.1rem;
-    color:var(--gold);
-    line-height:1;
-  }
-  .stat small{
-    color:var(--muted);
-    text-transform:uppercase;
-    letter-spacing:.08em;
-    font-size:.66rem;
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg-main);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", "Inter", Arial, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
 
-  main{
-    padding:44px 6vw 90px;
-    max-width:1400px;
-    margin:0 auto;
+  /* Malá značka bez samostatnej hlavičky */
+  .brand-bar {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 24px 14px;
+  }
+  .brand-bar h1 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    margin: 0;
+    color: #3a3a3c;
+    text-transform: uppercase;
   }
 
-  .toolbar{
-    display:flex;
-    gap:14px;
-    flex-wrap:wrap;
-    align-items:center;
-    margin-bottom:24px;
-    padding:16px 18px;
-    background:var(--ink-2);
-    border:1px solid var(--line);
-    border-radius:4px;
-  }
-  .toolbar input[type=text]{
-    flex:1 1 220px;
-    background:transparent;
-    border:none;
-    border-bottom:1px solid var(--line);
-    color:var(--paper);
-    font-family:'Source Serif 4', serif;
-    font-size:1rem;
-    padding:8px 4px;
-    outline:none;
-  }
-  .toolbar input[type=text]:focus{border-bottom-color:var(--gold);}
-  .toolbar input[type=text]::placeholder{color:var(--muted);}
-
-  select, .btn{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.78rem;
-    letter-spacing:.03em;
-    background:var(--ink);
-    color:var(--paper);
-    border:1px solid var(--line);
-    padding:9px 12px;
-    border-radius:3px;
-    cursor:pointer;
-  }
-  select:hover, .btn:hover{border-color:var(--gold);}
-  .btn.primary{
-    background:var(--gold);
-    color:var(--ink);
-    border-color:var(--gold);
-    font-weight:600;
-  }
-  .btn.primary:hover{background:#f0c168;}
-  .btn.ghost{background:transparent;}
-
-  .type-toggle{
-    display:flex;
-    border:1px solid var(--line);
-    border-radius:3px;
-    overflow:hidden;
-  }
-  .type-toggle button{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.75rem;
-    padding:9px 14px;
-    background:var(--ink);
-    color:var(--muted);
-    border:none;
-    cursor:pointer;
-    border-right:1px solid var(--line);
-  }
-  .type-toggle button:last-child{border-right:none;}
-  .type-toggle button.active{background:var(--velvet);color:var(--paper);}
-
-  .tmdb-status{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.68rem;
-    color:var(--muted);
-    display:flex;
-    align-items:center;
-    gap:6px;
-    margin-left:auto;
-  }
-  .tmdb-status .dot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
-  .tmdb-status.on .dot{background:var(--teal);}
-  .tmdb-status.on{color:var(--teal);}
-
-  .count-line{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.75rem;
-    color:var(--muted);
-    margin:0 0 16px;
-    letter-spacing:.03em;
+  main {
+    padding: 8px 24px 80px;
+    max-width: 1180px;
+    margin: 0 auto;
   }
 
-  /* row list, film-strip style */
-  .list{
-    display:flex;
-    flex-direction:column;
-    background:var(--paper);
-    border-radius:6px;
-    overflow:hidden;
-    box-shadow:0 10px 26px rgba(0,0,0,0.28);
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 28px;
+    background: var(--card-bg);
+    padding: 10px;
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
   }
-  .list-head{
-    display:grid;
-    grid-template-columns: 2.4fr 1.6fr .9fr .7fr .9fr .9fr .9fr 40px;
-    gap:10px;
-    padding:12px 18px;
-    background:var(--ink-2);
-    color:var(--gold);
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.66rem;
-    letter-spacing:.08em;
-    text-transform:uppercase;
-  }
-  .row{
-    display:grid;
-    grid-template-columns: 2.4fr 1.6fr .9fr .7fr .9fr .9fr .9fr 40px;
-    gap:10px;
-    align-items:center;
-    padding:13px 18px;
-    color:var(--ink);
-    border-bottom:1px solid rgba(0,0,0,0.08);
-    transition:background .15s;
-  }
-  .list .row:nth-child(even){background:rgba(0,0,0,0.02);}
-  .list .row:hover{background:rgba(227,176,75,0.14);}
-  .list .row:last-child{border-bottom:none;}
-
-  .row .title-cell{min-width:0;}
-  .row .title{
-    font-family:'Bebas Neue', sans-serif;
-    font-size:1.2rem;
-    line-height:1.05;
-    display:block;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .row .original{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.68rem;
-    color:var(--gold-dim);
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .row .type-pill{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.62rem;
-    letter-spacing:.06em;
-    text-transform:uppercase;
-    padding:3px 8px;
-    border-radius:20px;
-    background:rgba(0,0,0,0.07);
-    color:var(--muted);
-    white-space:nowrap;
-    width:fit-content;
-  }
-  .row .year{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.8rem;
-    color:var(--muted);
-  }
-  .rating-bar{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.72rem;
-    font-weight:600;
-  }
-  .rating-bar .track{
-    flex:1;
-    height:6px;
-    border-radius:4px;
-    background:rgba(0,0,0,0.08);
-    overflow:hidden;
-    min-width:34px;
-  }
-  .rating-bar .fill{height:100%;border-radius:4px;}
-  .rating-bar.milan .fill{background:var(--gold);}
-  .rating-bar.basa .fill{background:var(--velvet);}
-  .rating-bar.public .fill{background:var(--teal);}
-  .rating-bar .num{width:30px;text-align:right;}
-  .rating-bar.empty{color:var(--muted);font-weight:400;opacity:.55;}
-
-  .del{
-    background:none;border:none;
-    color:var(--muted);
-    font-size:1rem;
-    cursor:pointer;
-    opacity:0;
-    transition:opacity .15s;
-    justify-self:end;
-  }
-  .row:hover .del{opacity:.6;}
-  .del:hover{opacity:1 !important;color:var(--velvet);}
-
-  .empty-state{
-    text-align:center;
-    padding:70px 20px;
-    color:var(--muted);
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.85rem;
-  }
-  .empty-state b{
-    display:block;
-    font-family:'Bebas Neue', sans-serif;
-    font-size:2rem;
-    color:var(--ink);
-    margin-bottom:8px;
-    letter-spacing:.02em;
+  
+  .toolbar .field-search {
+    flex: 1 1 240px;
+    position: relative;
+    margin-bottom: 0;
   }
 
-  /* modal */
-  .overlay{
-    position:fixed;inset:0;
-    background:rgba(10,12,16,0.72);
-    display:none;
-    align-items:center;justify-content:center;
-    z-index:50;
-    padding:20px;
+  .toolbar input[type=text] {
+    width: 100%;
+    background: var(--bg-main);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    padding: 11px 14px;
+    outline: none;
+    transition: all 0.2s;
   }
-  .overlay.open{display:flex;}
-  .modal{
-    background:var(--paper);
-    color:var(--ink);
-    width:100%;
-    max-width:540px;
-    border-radius:6px;
-    padding:30px 30px 26px;
-    max-height:88vh;
-    overflow:auto;
-    box-shadow:0 30px 70px rgba(0,0,0,0.5);
-  }
-  .modal h2{
-    font-family:'Bebas Neue', sans-serif;
-    font-size:2.1rem;
-    margin:0 0 6px;
-    letter-spacing:.01em;
-  }
-  .modal .sub{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.72rem;
-    color:var(--gold-dim);
-    margin:0 0 18px;
-  }
-  .field{margin-bottom:14px;position:relative;}
-  .field label{
-    display:block;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.68rem;
-    text-transform:uppercase;
-    letter-spacing:.07em;
-    color:var(--gold-dim);
-    margin-bottom:5px;
-  }
-  .field input, .field select{
-    width:100%;
-    padding:9px 10px;
-    border:1px solid rgba(0,0,0,0.18);
-    border-radius:3px;
-    font-family:'Source Serif 4', serif;
-    font-size:.95rem;
-    background:#fff;
-    color:var(--ink);
-  }
-  .field-row{display:flex;gap:12px;}
-  .field-row .field{flex:1;}
-
-  .suggest-box{
-    position:absolute;
-    top:100%;left:0;right:0;
-    background:#fff;
-    border:1px solid rgba(0,0,0,0.15);
-    border-radius:0 0 4px 4px;
-    box-shadow:0 12px 24px rgba(0,0,0,0.2);
-    z-index:10;
-    max-height:260px;
-    overflow:auto;
-    display:none;
-  }
-  .suggest-box.open{display:block;}
-  .suggest-item{
-    display:flex;
-    gap:10px;
-    padding:8px 10px;
-    cursor:pointer;
-    align-items:center;
-    border-bottom:1px solid rgba(0,0,0,0.06);
-  }
-  .suggest-item:last-child{border-bottom:none;}
-  .suggest-item:hover{background:rgba(227,176,75,0.18);}
-  .suggest-item img{
-    width:32px;height:46px;object-fit:cover;border-radius:2px;background:#ddd;flex-shrink:0;
-  }
-  .suggest-item .si-title{font-family:'Source Serif 4',serif;font-size:.88rem;line-height:1.15;}
-  .suggest-item .si-meta{font-family:'IBM Plex Mono',monospace;font-size:.66rem;color:var(--muted);}
-  .suggest-loading{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.7rem;
-    color:var(--muted);
-    padding:8px 10px;
+  .toolbar input[type=text]:focus {
+    background: #fff;
+    border-color: var(--accent-blue);
   }
 
-  .modal-actions{
-    display:flex;
-    justify-content:flex-end;
-    gap:10px;
-    margin-top:20px;
+  select, .btn {
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    border: 1px solid transparent;
+    padding: 10px 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
   }
-  .modal-actions .btn{
-    background:var(--ink);
-    color:var(--paper);
-    border-color:var(--ink);
-  }
-  .modal-actions .btn.primary{
-    background:var(--velvet);
-    border-color:var(--velvet);
-    color:var(--paper);
-  }
-  .modal-actions .btn.primary:hover{background:#b5333f;}
+  select:hover, .btn:hover { background: #e8e8ed; }
 
-  .tmdb-note{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.66rem;
-    color:var(--muted);
-    background:rgba(0,0,0,0.04);
-    border-left:2px solid var(--teal);
-    padding:8px 10px;
-    margin-bottom:16px;
-    line-height:1.5;
+  /* Väčšie zvýraznené tlačidlo pre pridanie */
+  .btn.btn-large-add {
+    background: var(--accent-blue);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    box-shadow: none;
   }
-  .tmdb-note a{color:var(--teal);}
-
-  footer{
-    text-align:center;
-    padding:30px 20px 50px;
-    color:var(--muted);
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.72rem;
-    letter-spacing:.05em;
+  .btn.btn-large-add:hover {
+    background: var(--accent-blue-hover);
   }
 
-  @media (max-width:900px){
-    .list-head{display:none;}
-    .row{
-      grid-template-columns: 1fr;
-      gap:6px;
-      padding:14px 16px;
-    }
-    .row .del{position:absolute;top:10px;right:14px;}
-    .row{position:relative;}
-    .rating-bar{max-width:220px;}
+  .btn.ghost { background: transparent; }
+
+  .type-toggle {
+    display: flex;
+    background: var(--bg-main);
+    padding: 2px;
+    border-radius: 8px;
+  }
+  .type-toggle button {
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .type-toggle button.active {
+    background: #ffffff;
+    color: var(--text-primary);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  .tmdb-status {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .tmdb-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary); }
+  .tmdb-status.on .dot { background: #34c759; }
+
+  .count-line {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 0 0 14px 4px;
+    font-weight: 500;
+  }
+
+  /* Zoznam položiek s medzerami medzi kartami */
+  .list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .row-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 14px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .row-card:hover {
+    border-color: #d2d7de;
+    box-shadow: 0 8px 24px rgba(15,23,42,0.05);
+  }
+
+  /* Náhľad na prvej pozícii */
+  .poster-frame {
+    width: 64px;
+    height: 92px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #e9ecf0;
+    flex-shrink: 0;
+  }
+  .poster-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .poster-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 8px;
+  }
+
+  .main-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .title-line {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .type-pill {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--bg-main);
+    color: var(--text-secondary);
+    letter-spacing: 0.05em;
+  }
+
+  .meta-line {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: 16px;
+    row-gap: 4px;
+    line-height: 1.45;
+  }
+
+  .meta-item b {
+    color: var(--text-primary);
+    font-weight: 500;
+  }
+
+  /* Spoločné hodnotenie */
+  .ratings-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding-left: 8px;
+  }
+
+  .rating-box {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 74px;
+    background: var(--bg-main);
+    border-radius: 10px;
+    padding: 9px 11px;
+  }
+  .rating-box .label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .rating-box .val {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent-blue);
+  }
+  .rating-box .val.tmdb { color: #9a6b00; }
+
+  .rate-btn {
+    background: #e8f2ff;
+    color: var(--accent-blue);
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    font-weight: 650;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .rate-btn:hover { background: #dcecff; }
+
+  .del {
+    background: none; border: none;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .del:hover { background: #ffe5e5; color: #ff3b30; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+  }
+
+  /* Modal */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    width: 100%;
+    max-width: 500px;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  }
+  .modal h2 { margin: 0 0 6px; font-size: 1.3rem; font-weight: 600; }
+  .modal .sub { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; }
+
+  .field { margin-bottom: 14px; position: relative; }
+  .field label {
+    display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px; font-size: 0.95rem;
+    outline: none; background: var(--bg-main);
+  }
+  .field input:focus { border-color: var(--accent-blue); background: #fff; }
+  .field .help {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+  }
+
+  .suggest-box {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: #fff; border: 1px solid var(--border-color);
+    border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    z-index: 10; max-height: 250px; overflow: auto; display: none;
+    margin-top: 4px;
+  }
+  .suggest-box.open { display: block; }
+  .suggest-item {
+    display: flex; gap: 10px; padding: 8px 12px; cursor: pointer; align-items: center;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .suggest-item:last-child { border-bottom: none; }
+  .suggest-item:hover { background: var(--bg-main); }
+  .suggest-item img { width: 32px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+  .suggest-item .si-title { font-size: 0.88rem; font-weight: 600; }
+  .suggest-item .si-meta { font-size: 0.72rem; color: var(--text-secondary); }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+  @media (max-width: 768px) {
+    .brand-bar { padding: 22px 16px 12px; }
+    main { padding: 8px 16px 60px; }
+    .toolbar { align-items: stretch; }
+    .toolbar .field-search { flex-basis: 100%; }
+    .tmdb-status { width: 100%; margin-left: 4px; }
+    .row-card { align-items: flex-start; gap: 13px; flex-wrap: wrap; }
+    .poster-frame { width: 56px; height: 82px; }
+    .main-info { width: calc(100% - 69px); flex: none; }
+    .ratings-group { width: 100%; padding: 0; }
+    .ratings-group .rating-box { flex: 1; }
+    .rate-btn { flex: 1.35; align-self: stretch; }
+    .del { align-self: center; }
   }
 </style>
 </head>
 <body>
 
-<div class="perf"></div>
-
-<header>
-  <div class="eyebrow">Teraz premietame · Milan &amp; Baša</div>
-  <h1>FILM<span>OPOLIS</span></h1>
-  <p class="tagline">Súkromné mesto filmov a seriálov — každý titul má vlastný riadok, vlastné hodnotenie, vlastné miesto na plátne.</p>
-  <div class="stats" id="stats"></div>
-</header>
-
-<div class="perf bottom"></div>
+<div class="brand-bar">
+  <h1>FILMOPOLIS</h1>
+</div>
 
 <main>
   <div class="toolbar">
-    <input type="text" id="search" placeholder="Hľadať podľa názvu…">
+    <div class="field-search">
+      <input type="text" id="search" placeholder="Hľadať v denníku alebo zadať názov z TMDb…" autocomplete="off">
+      <div class="suggest-box" id="mainSuggestBox"></div>
+    </div>
+    <button class="btn btn-large-add" id="addBtn">+ Pridať hodnotenie</button>
     <div class="type-toggle" id="typeToggle">
       <button data-type="all" class="active">Všetko</button>
       <button data-type="film">Filmy</button>
@@ -490,41 +417,23 @@
       <option value="year-asc">Rok ↑</option>
       <option value="az">Názov A–Z</option>
     </select>
-    <button class="btn primary" id="addBtn">+ Pridať titul</button>
-    <button class="btn ghost" id="settingsBtn" title="Nastavenia TMDb">⚙</button>
+    <button class="btn ghost" id="settingsBtn" title="Nastavenia TMDb">⚙ Nastavenia</button>
     <div class="tmdb-status" id="tmdbStatus"><span class="dot"></span><span id="tmdbStatusText">TMDb nepripojené</span></div>
   </div>
 
   <p class="count-line" id="countLine"></p>
 
-  <div class="list" id="listWrap">
-    <div class="list-head">
-      <div>Názov</div>
-      <div>Originál</div>
-      <div>Typ</div>
-      <div>Rok</div>
-      <div>Milan</div>
-      <div>Baša</div>
-      <div>Verejné</div>
-      <div></div>
-    </div>
-    <div id="rows"></div>
-  </div>
+  <div class="list-container" id="rows"></div>
 </main>
-
-<footer>Filmopolis · osobný filmový denník · dáta sa ukladajú iba v tomto prehliadači · verejné hodnotenie cez TMDb</footer>
 
 <!-- Add modal -->
 <div class="overlay" id="overlay">
   <div class="modal">
-    <h2>Pridať titul</h2>
-    <p class="sub">začni písať názov — klikni na zhodu a rovno sa zaradí do zoznamu</p>
-    <div class="tmdb-note" id="tmdbNoteInline" style="display:none;">
-      ČSFD nemá verejné API a blokuje priame volania z prehliadača, preto sa dá napojiť len TMDb (themoviedb.org) — bezplatné API s CORS podporou.
-    </div>
+    <h2>Pridať titul do denníka</h2>
+    <p class="sub">Zadaj názov a vyber zo zoznamu pre automatické načítanie detailov</p>
     <div class="field">
       <label for="f-title">Názov filmu alebo seriálu</label>
-      <input type="text" id="f-title" autocomplete="off" placeholder="napr. Matrix…">
+      <input type="text" id="f-title" autocomplete="off" placeholder="Napr. Inception, Severance…">
       <div class="suggest-box" id="suggestBox"></div>
     </div>
     <p class="count-line" id="addFeedback" style="margin-top:10px;"></p>
@@ -534,113 +443,114 @@
   </div>
 </div>
 
+<!-- Rating modal -->
+<div class="overlay" id="ratingOverlay">
+  <div class="modal">
+    <h2 id="ratingTitle">Spoločné hodnotenie</h2>
+    <p class="sub">Jedno spoločné hodnotenie titulu</p>
+    <form id="ratingForm">
+      <input type="hidden" id="ratingId">
+      <div class="field">
+        <label for="f-rating">Hodnotenie v %</label>
+        <input type="number" id="f-rating" min="0" max="100" step="1" inputmode="numeric" placeholder="Napr. 85">
+        <span class="help">Zadaj číslo od 0 do 100. Prázdne pole hodnotenie odstráni.</span>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="ratingCancel">Zrušiť</button>
+        <button type="submit" class="btn btn-large-add">Uložiť hodnotenie</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- Settings modal -->
 <div class="overlay" id="settingsOverlay">
   <div class="modal">
-    <h2>Nastavenia — TMDb</h2>
-    <p class="sub">pre automatické našepkávanie a doplnenie údajov</p>
-    <div class="tmdb-note">
-      ČSFD.sk nemá verejné API a z prehliadača naň nejde volať priamo (CORS). TMDb (The Movie Database) má bezplatné oficiálne API prístupné z prehliadača. Kľúč si vytvor zadarmo na
-      <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a> (API Read Access Token alebo API Key v3).
-    </div>
+    <h2>Nastavenia TMDb API</h2>
+    <p class="sub">Pre automatické dopĺňanie informácií a hodnotení z The Movie Database</p>
     <form id="settingsForm">
       <div class="field">
-        <label for="f-apikey">TMDb API kľúč (v3 auth)</label>
-        <input type="text" id="f-apikey" placeholder="napr. 8d6a4d...">
+        <label for="f-apikey">TMDb API kľúč</label>
+        <input type="text" id="f-apikey" placeholder="Vlož kľúč z themoviedb.org">
       </div>
       <div class="modal-actions">
         <button type="button" class="btn" id="settingsCancel">Zrušiť</button>
-        <button type="submit" class="btn primary">Uložiť kľúč</button>
+        <button type="submit" class="btn btn-large-add">Uložiť</button>
       </div>
     </form>
   </div>
 </div>
 
 <script>
+const SEED_DATA = [{"id": 1, "title": "Silo", "original": "", "milan": 90, "basa": null, "year": 2023, "type": "seriál", "genre": "Sci-Fi", "director": "Graham Yost", "actors": "Rebecca Ferguson, Common", "poster": "https://image.tmdb.org/t/p/w92/111.jpg", "public": 81}, {"id": 2, "title": "Oppenheimer", "original": "", "milan": 75, "basa": null, "year": 2023, "type": "film", "genre": "Drama", "director": "Christopher Nolan", "actors": "Cillian Murphy, Emily Blunt", "poster": "", "public": 81}, {"id": 16, "title": "Vykúpenie z väznice Shawshank", "original": "The Shawshank Redemption", "milan": 99, "basa": null, "year": 1994, "type": "film", "genre": "Drama", "director": "Frank Darabont", "actors": "Tim Robbins, Morgan Freeman", "poster": "", "public": 87}];
+
+const STORAGE_KEY = 'filmopolis-entries-v3';
 const APIKEY_STORAGE = 'filmopolis-tmdb-key';
 const DEFAULT_TMDB_KEY = '6e26182284c01e502fcbf2a0046199ee';
-const API_URL = '/api/films';
+
+function loadData(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+  return SEED_DATA.slice();
+}
+function saveData(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
 function getApiKey(){ return localStorage.getItem(APIKEY_STORAGE) || DEFAULT_TMDB_KEY; }
 function setApiKey(k){ localStorage.setItem(APIKEY_STORAGE, k); }
 
-async function loadData(){
-  try{
-    const res = await fetch(API_URL);
-    if(!res.ok) throw new Error('API ' + res.status);
-    return await res.json();
-  }catch(err){
-    console.error('Nepodarilo sa nacitat data zo servera:', err);
-    return null;
+let data = loadData().map(item => {
+  if(item.rating == null){
+    const legacy = [item.milan, item.basa].filter(v => v != null && Number.isFinite(Number(v)));
+    item.rating = legacy.length ? Math.round(legacy.reduce((a,b)=>a+Number(b),0) / legacy.length) : null;
   }
-}
-async function addEntryRemote(entry){
-  const res = await fetch(API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(entry)
-  });
-  if(!res.ok) throw new Error('API ' + res.status);
-  return await res.json();
-}
-async function deleteEntryRemote(id){
-  const res = await fetch(API_URL, {
-    method:'DELETE',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ id })
-  });
-  if(!res.ok) throw new Error('API ' + res.status);
-}
-
-let data = [];
+  return item;
+});
+saveData(data);
 let state = { search:'', type:'all', sort:'rating-desc' };
 
 const rowsEl = document.getElementById('rows');
 const countLine = document.getElementById('countLine');
-const statsEl = document.getElementById('stats');
 
 function escapeHTML(s){
   return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-function ratingBarHTML(cls, val){
-  if(val==null){
-    return `<div class="rating-bar ${cls} empty">—</div>`;
-  }
-  return `<div class="rating-bar ${cls}">
-    <div class="track"><div class="fill" style="width:${val}%"></div></div>
-    <div class="num">${val}%</div>
-  </div>`;
-}
-
-function renderStats(){
-  const rated = data.filter(d => d.milan!=null);
-  const avg = rated.length ? Math.round(rated.reduce((a,b)=>a+b.milan,0)/rated.length) : 0;
-  const films = data.filter(d=>d.type==='film').length;
-  const series = data.filter(d=>d.type==='seriál').length;
-  const top = rated.slice().sort((a,b)=>b.milan-a.milan)[0];
-  statsEl.innerHTML = `
-    <div class="stat"><b>${data.length}</b><small>Titulov v denníku</small></div>
-    <div class="stat"><b>${films}</b><small>Filmy</small></div>
-    <div class="stat"><b>${series}</b><small>Seriály</small></div>
-    <div class="stat"><b>${avg}%</b><small>Priemer Milan</small></div>
-    ${top ? `<div class="stat"><b>${escapeHTML(top.title)}</b><small>Najlepšie hodnotené</small></div>` : ''}
-  `;
+/* Zlúčenie hodnotení */
+function getCombinedRating(item){
+  return item.rating != null && Number.isFinite(Number(item.rating)) ? Number(item.rating) : null;
 }
 
 function rowHTML(item){
+  const combined = getCombinedRating(item);
+  const posterHTML = item.poster 
+    ? `<div class="poster-frame"><img src="${item.poster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'"></div>`
+    : `<div class="poster-frame"><div class="poster-placeholder">Bez náhľadu</div></div>`;
+
   return `
-  <div class="row" data-id="${item.id}">
-    <div class="title-cell">
-      <span class="title">${escapeHTML(item.title)}</span>
+  <div class="row-card" data-id="${item.id}">
+    ${posterHTML}
+    <div class="main-info">
+      <div class="title-line">
+        <span class="title">${escapeHTML(item.title)}</span>
+        <span class="type-pill">${item.type}</span>
+      </div>
+      <div class="meta-line">
+        <span class="meta-item"><b>Rok:</b> ${item.year || '—'}</span>
+        <span class="meta-item"><b>Réžia:</b> ${item.director ? escapeHTML(item.director) : '—'}</span>
+        <span class="meta-item"><b>Hrajú:</b> ${item.actors ? escapeHTML(item.actors) : '—'}</span>
+      </div>
     </div>
-    <div class="original">${item.original ? escapeHTML(item.original) : '—'}</div>
-    <div><span class="type-pill">${item.type}</span></div>
-    <div class="year">${item.year || '—'}</div>
-    ${ratingBarHTML('milan', item.milan)}
-    ${ratingBarHTML('basa', item.basa)}
-    ${ratingBarHTML('public', item.public)}
+    <div class="ratings-group">
+      <div class="rating-box">
+        <span class="label">Spoločné</span>
+        <span class="val">${combined != null ? combined + '%' : '—'}</span>
+      </div>
+      <div class="rating-box">
+        <span class="label">TMDb</span>
+        <span class="val tmdb">${item.public != null ? item.public + '%' : '—'}</span>
+      </div>
+      <button class="rate-btn" data-rate="${item.id}">${combined == null ? 'Pridať hodnotenie' : 'Upraviť'}</button>
+    </div>
     <button class="del" title="Odstrániť" data-del="${item.id}">✕</button>
   </div>`;
 }
@@ -650,23 +560,26 @@ function applyFiltersAndRender(){
   if(state.type !== 'all') list = list.filter(d => d.type === state.type);
   if(state.search.trim()){
     const q = state.search.trim().toLowerCase();
-    list = list.filter(d => d.title.toLowerCase().includes(q) || (d.original||'').toLowerCase().includes(q));
+    list = list.filter(d => 
+      d.title.toLowerCase().includes(q) || 
+      (d.original||'').toLowerCase().includes(q) ||
+      (d.director||'').toLowerCase().includes(q) ||
+      (d.actors||'').toLowerCase().includes(q)
+    );
   }
   switch(state.sort){
-    case 'rating-desc': list.sort((a,b)=>(b.milan??-1)-(a.milan??-1)); break;
-    case 'rating-asc': list.sort((a,b)=>(a.milan??101)-(b.milan??101)); break;
+    case 'rating-desc': list.sort((a,b)=>(getCombinedRating(b)??-1)-(getCombinedRating(a)??-1)); break;
+    case 'rating-asc': list.sort((a,b)=>(getCombinedRating(a)??101)-(getCombinedRating(b)??101)); break;
     case 'year-desc': list.sort((a,b)=>(b.year??0)-(a.year??0)); break;
     case 'year-asc': list.sort((a,b)=>(a.year??9999)-(b.year??9999)); break;
     case 'az': list.sort((a,b)=>a.title.localeCompare(b.title,'sk')); break;
   }
   rowsEl.innerHTML = list.length
     ? list.map(rowHTML).join('')
-    : `<div class="empty-state"><b>Prázdne plátno</b>Žiadny titul nezodpovedá filtru — skús iné hľadanie.</div>`;
-  countLine.textContent = `${list.length} z ${data.length} titulov`;
-  renderStats();
+    : `<div class="empty-state">Žiadne tituly nezodpovedajú vyhľadávaniu.</div>`;
+  countLine.textContent = `Zobrazených ${list.length} z ${data.length} titulov`;
 }
 
-document.getElementById('search').addEventListener('input', e=>{ state.search = e.target.value; applyFiltersAndRender(); });
 document.getElementById('sortSel').addEventListener('change', e=>{ state.sort = e.target.value; applyFiltersAndRender(); });
 document.getElementById('typeToggle').addEventListener('click', e=>{
   const btn = e.target.closest('button'); if(!btn) return;
@@ -675,50 +588,67 @@ document.getElementById('typeToggle').addEventListener('click', e=>{
   state.type = btn.dataset.type;
   applyFiltersAndRender();
 });
-rowsEl.addEventListener('click', async e=>{
+rowsEl.addEventListener('click', e=>{
+  const rate = e.target.closest('[data-rate]');
+  if(rate){
+    openRatingModal(Number(rate.dataset.rate));
+    return;
+  }
   const del = e.target.closest('[data-del]');
   if(del){
     const id = Number(del.dataset.del);
-    const prevData = data;
     data = data.filter(d => d.id !== id);
+    saveData(data);
     applyFiltersAndRender();
-    try{
-      await deleteEntryRemote(id);
-    }catch(err){
-      console.error('Zmazanie zlyhalo:', err);
-      data = prevData;
-      applyFiltersAndRender();
-      alert('Zmazanie sa nepodarilo — skontroluj pripojenie.');
-    }
   }
 });
 
-/* ---- Add modal ---- */
-const overlay = document.getElementById('overlay');
-const tmdbNoteInline = document.getElementById('tmdbNoteInline');
-document.getElementById('addBtn').addEventListener('click', ()=>{
-  overlay.classList.add('open');
-  tmdbNoteInline.style.display = getApiKey() ? 'none' : 'block';
-  document.getElementById('f-title').focus();
+/* Jedno spoločné hodnotenie */
+const ratingOverlay = document.getElementById('ratingOverlay');
+const ratingInput = document.getElementById('f-rating');
+function openRatingModal(id){
+  const item = data.find(d => d.id === id);
+  if(!item) return;
+  document.getElementById('ratingId').value = id;
+  document.getElementById('ratingTitle').textContent = item.title;
+  ratingInput.value = getCombinedRating(item) ?? '';
+  ratingOverlay.classList.add('open');
+  setTimeout(()=>ratingInput.focus(), 0);
+}
+function closeRatingModal(){ ratingOverlay.classList.remove('open'); }
+document.getElementById('ratingCancel').addEventListener('click', closeRatingModal);
+ratingOverlay.addEventListener('click', e=>{ if(e.target === ratingOverlay) closeRatingModal(); });
+document.getElementById('ratingForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const item = data.find(d => d.id === Number(document.getElementById('ratingId').value));
+  if(!item) return;
+  const raw = ratingInput.value.trim();
+  if(raw !== '' && (Number(raw) < 0 || Number(raw) > 100)) return;
+  item.rating = raw === '' ? null : Math.round(Number(raw));
+  delete item.milan;
+  delete item.basa;
+  saveData(data);
+  applyFiltersAndRender();
+  closeRatingModal();
 });
-document.getElementById('cancelBtn').addEventListener('click', ()=>{ overlay.classList.remove('open'); resetSuggest(); clearFeedback(); });
-overlay.addEventListener('click', e=>{ if(e.target === overlay){ overlay.classList.remove('open'); resetSuggest(); clearFeedback(); } });
 
-/* ---- Settings modal ---- */
+/* Modal správa pre tlačidlo + Pridať hodnotenie */
+const overlay = document.getElementById('overlay');
+document.getElementById('addBtn').addEventListener('click', ()=>{ overlay.classList.add('open'); document.getElementById('f-title').focus(); });
+document.getElementById('cancelBtn').addEventListener('click', ()=>{ overlay.classList.remove('open'); resetSuggest(); });
+overlay.addEventListener('click', e=>{ if(e.target === overlay){ overlay.classList.remove('open'); resetSuggest(); } });
+
 const settingsOverlay = document.getElementById('settingsOverlay');
 function refreshTmdbStatus(){
   const on = !!getApiKey();
-  const box = document.getElementById('tmdbStatus');
-  const txt = document.getElementById('tmdbStatusText');
-  box.classList.toggle('on', on);
-  txt.textContent = on ? 'TMDb pripojené' : 'TMDb nepripojené';
+  document.getElementById('tmdbStatus').classList.toggle('on', on);
+  document.getElementById('tmdbStatusText').textContent = on ? 'TMDb aktívne' : 'TMDb nepripojené';
 }
 document.getElementById('settingsBtn').addEventListener('click', ()=>{
   document.getElementById('f-apikey').value = getApiKey();
   settingsOverlay.classList.add('open');
 });
 document.getElementById('settingsCancel').addEventListener('click', ()=> settingsOverlay.classList.remove('open'));
-settingsOverlay.addEventListener('click', e=>{ if(e.target === settingsOverlay) settingsOverlay.classList.remove('open'); });
 document.getElementById('settingsForm').addEventListener('submit', e=>{
   e.preventDefault();
   setApiKey(document.getElementById('f-apikey').value.trim());
@@ -727,7 +657,7 @@ document.getElementById('settingsForm').addEventListener('submit', e=>{
 });
 refreshTmdbStatus();
 
-/* ---- TMDb autocomplete ---- */
+/* TMDb Našepkávač v modálnom okne */
 const titleInput = document.getElementById('f-title');
 const suggestBox = document.getElementById('suggestBox');
 let debounceTimer = null;
@@ -738,103 +668,215 @@ titleInput.addEventListener('input', ()=>{
   const q = titleInput.value.trim();
   clearTimeout(debounceTimer);
   if(!getApiKey() || q.length < 2){ resetSuggest(); return; }
-  debounceTimer = setTimeout(()=> runTmdbSearch(q), 350);
-});
-document.addEventListener('click', e=>{
-  if(!e.target.closest('.field') || e.target.id !== 'f-title'){
-    if(!e.target.closest('.suggest-box')) resetSuggest();
-  }
+  debounceTimer = setTimeout(()=> runTmdbSearch(q, suggestBox), 300);
 });
 
-async function runTmdbSearch(query){
+async function runTmdbSearch(query, targetBox){
   const key = getApiKey();
-  suggestBox.innerHTML = `<div class="suggest-loading">Hľadám na TMDb…</div>`;
-  suggestBox.classList.add('open');
-  try{
-    const isBearer = key.startsWith('eyJ'); // v4 read access tokens are JWT-like
+  targetBox.innerHTML = `<div style="padding:8px 12px;font-size:0.8rem;color:var(--text-secondary);">Vyhľadávam...</div>`;
+  targetBox.classList.add('open');
+  try {
+    const isBearer = key.startsWith('eyJ');
     const url = isBearer
-      ? `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(query)}&language=sk-SK&include_adult=false`
-      : `https://api.themoviedb.org/3/search/multi?api_key=${encodeURIComponent(key)}&query=${encodeURIComponent(query)}&language=sk-SK&include_adult=false`;
+      ? `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(query)}&language=sk-SK`
+      : `https://api.themoviedb.org/3/search/multi?api_key=${encodeURIComponent(key)}&query=${encodeURIComponent(query)}&language=sk-SK`;
     const res = await fetch(url, isBearer ? { headers:{ Authorization:`Bearer ${key}` } } : {});
-    let json;
-    try{ json = await res.json(); }catch(parseErr){ json = null; }
-    if(!res.ok){
-      const detail = json && json.status_message ? json.status_message : `HTTP ${res.status}`;
-      console.error('TMDb error:', res.status, json);
-      suggestBox.innerHTML = `<div class="suggest-loading">Chyba TMDb (${res.status}): ${escapeHTML(detail)}</div>`;
-      return;
-    }
-    const results = (json.results||[]).filter(r => r.media_type==='movie' || r.media_type==='tv').slice(0,8);
+    const json = await res.json();
+    const results = (json.results||[]).filter(r => r.media_type==='movie' || r.media_type==='tv').slice(0,6);
     if(!results.length){
-      suggestBox.innerHTML = `<div class="suggest-loading">Žiadne zhody</div>`;
+      targetBox.innerHTML = `<div style="padding:8px 12px;font-size:0.8rem;color:var(--text-secondary);">Nenašli sa žiadne výsledky</div>`;
       return;
     }
-    suggestBox.innerHTML = results.map(r => {
+    targetBox.innerHTML = results.map(r => {
       const name = r.title || r.name || '';
-      const orig = r.original_title || r.original_name || '';
       const date = r.release_date || r.first_air_date || '';
       const year = date ? date.slice(0,4) : '';
       const type = r.media_type === 'tv' ? 'seriál' : 'film';
       const poster = r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : '';
       const rating = r.vote_average ? Math.round(r.vote_average*10) : '';
-      return `<div class="suggest-item" data-name="${escapeHTML(name)}" data-orig="${escapeHTML(orig)}" data-year="${year}" data-type="${type}" data-rating="${rating}">
-        ${poster ? `<img src="${poster}" alt="">` : ''}
+      return `<div class="suggest-item" data-id="${r.id}" data-type="${r.media_type}">
+        ${poster ? `<img src="${poster}">` : '<div style="width:32px;height:48px;background:#eee;border-radius:4px;"></div>'}
         <div>
           <div class="si-title">${escapeHTML(name)}</div>
           <div class="si-meta">${type === 'seriál' ? 'Seriál' : 'Film'}${year ? ' · '+year : ''}${rating ? ' · '+rating+'%' : ''}</div>
         </div>
       </div>`;
     }).join('');
-  }catch(err){
-    console.error('TMDb fetch failed:', err);
-    const hint = location.protocol === 'file:'
-      ? 'Stránka je otvorená priamo zo súboru (file://) — niektoré prehliadače tu blokujú sieťové požiadavky. Skús ju otvoriť cez lokálny server (napr. dvojklik nemusí stačiť) alebo v inom prehliadači.'
-      : 'Skontroluj internetové pripojenie alebo či požiadavku neblokuje rozšírenie/firewall.';
-    suggestBox.innerHTML = `<div class="suggest-loading">Sieťová chyba: ${escapeHTML(err.message || String(err))}<br>${hint}</div>`;
+  } catch(e) {
+    targetBox.innerHTML = `<div style="padding:8px 12px;font-size:0.8rem;color:red;">Chyba pripojenia</div>`;
   }
 }
 
-const addFeedback = document.getElementById('addFeedback');
-function clearFeedback(){ addFeedback.textContent=''; }
+async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
+  const key = getApiKey();
+  const isBearer = key.startsWith('eyJ');
+  try {
+    const detailUrl = isBearer
+      ? `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?append_to_response=credits&language=sk-SK`
+      : `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${encodeURIComponent(key)}&append_to_response=credits&language=sk-SK`;
+    const res = await fetch(detailUrl, isBearer ? { headers:{ Authorization:`Bearer ${key}` } } : {});
+    const d = await res.json();
+
+    let director = '';
+    if(d.credits && d.credits.crew){
+      const dirObj = d.credits.crew.find(c => c.job === 'Director');
+      if(dirObj) director = dirObj.name;
+    }
+    if(!director && d.created_by && d.created_by.length){
+      director = d.created_by.map(c=>c.name).join(', ');
+    }
+
+    let actors = '';
+    if(d.credits && d.credits.cast){
+      actors = d.credits.cast.slice(0, 3).map(a=>a.name).join(', ');
+    }
+
+    const nextId = data.length ? Math.max(...data.map(x=>x.id))+1 : 1;
+    const entry = {
+      id: nextId,
+      title: d.title || d.name,
+      original: d.original_title || d.original_name || '',
+      type: mediaType === 'tv' ? 'seriál' : 'film',
+      year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
+      rating: null,
+      public: d.vote_average ? Math.round(d.vote_average * 10) : null,
+      poster: d.poster_path ? `https://image.tmdb.org/t/p/w92${d.poster_path}` : '',
+      director: director,
+      actors: actors,
+      tmdbId: Number(tmdbId)
+    };
+    data.push(entry);
+    saveData(data);
+    applyFiltersAndRender();
+    if(onSuccess) onSuccess(entry);
+  } catch(err) {
+    console.error(err);
+  }
+}
 
 suggestBox.addEventListener('click', async e=>{
   const item = e.target.closest('.suggest-item');
   if(!item) return;
-  const entry = {
-    title: item.dataset.name,
-    original: item.dataset.orig || '',
-    type: item.dataset.type,
-    year: item.dataset.year ? Number(item.dataset.year) : null,
-    milan: null,
-    basa: null,
-    public: item.dataset.rating ? Number(item.dataset.rating) : null,
-    genre:'', director:'', actors:'', summary:'', csfd:null, imdb:null
-  };
-  addFeedback.textContent = 'Ukladám…';
-  try{
-    const saved = await addEntryRemote(entry);
-    data.push(saved);
-    applyFiltersAndRender();
-    addFeedback.textContent = `✓ Pridané: ${saved.title}${saved.year ? ' ('+saved.year+')' : ''} — hodnotenia doplníš neskôr`;
-  }catch(err){
-    console.error('Pridanie zlyhalo:', err);
-    addFeedback.textContent = 'Pridanie sa nepodarilo — skontroluj pripojenie na databázu.';
-  }
-  titleInput.value = '';
-  resetSuggest();
-  titleInput.focus();
+  await handleSelectTmdbItem(item.dataset.id, item.dataset.type, (entry) => {
+    document.getElementById('addFeedback').textContent = `✓ Pridané: ${entry.title}`;
+    titleInput.value = '';
+    resetSuggest();
+  });
 });
 
-(async function init(){
-  const loaded = await loadData();
-  if(loaded === null){
-    rowsEl.innerHTML = `<div class="empty-state"><b>Databáza nedostupná</b>Skontroluj, či je nasadená Netlify funkcia /api/films (pozri README).</div>`;
-    countLine.textContent = '';
-    return;
-  }
-  data = loaded;
+/* HLAVNÝ VYHĽADÁVAČ PREPOJENÝ S TMDb A NAŠEPKÁVANÍM */
+const mainSearchInput = document.getElementById('search');
+const mainSuggestBox = document.getElementById('mainSuggestBox');
+let mainDebounceTimer = null;
+
+function resetMainSuggest(){ 
+  mainSuggestBox.classList.remove('open'); 
+  mainSuggestBox.innerHTML = ''; 
+}
+
+mainSearchInput.addEventListener('input', e => {
+  const q = e.target.value;
+  state.search = q;
   applyFiltersAndRender();
-})();
+  
+  clearTimeout(mainDebounceTimer);
+  if (!getApiKey() || q.trim().length < 2) { 
+    resetMainSuggest(); 
+    return; 
+  }
+  mainDebounceTimer = setTimeout(() => {
+    runTmdbSearch(q.trim(), mainSuggestBox);
+    // Upravíme text v meta položkách v hlavnom našepkávači pre lepšiu zrozumiteľnosť
+    setTimeout(() => {
+      mainSuggestBox.querySelectorAll('.suggest-item .si-meta').forEach(el => {
+        el.textContent = 'Pridať z TMDb · ' + el.textContent;
+      });
+    }, 50);
+  }, 300);
+});
+
+mainSuggestBox.addEventListener('click', async e => {
+  const item = e.target.closest('.suggest-item');
+  if (!item) return;
+  await handleSelectTmdbItem(item.dataset.id, item.dataset.type, () => {
+    mainSearchInput.value = '';
+    state.search = '';
+    applyFiltersAndRender();
+    resetMainSuggest();
+  });
+});
+
+// Zatvorenie hlavného našepkávača pri kliknutí mimo
+document.addEventListener('click', e => {
+  if (!mainSearchInput.contains(e.target) && !mainSuggestBox.contains(e.target)) {
+    resetMainSuggest();
+  }
+});
+
+applyFiltersAndRender();
+
+/* Doplnenie TMDb údajov pri starších uložených tituloch */
+let enrichmentStarted = false;
+async function tmdbRequest(path, params={}){
+  const key = getApiKey();
+  if(!key) throw new Error('TMDb API key is missing');
+  const isBearer = key.startsWith('eyJ');
+  const query = new URLSearchParams({language:'sk-SK', ...params});
+  if(!isBearer) query.set('api_key', key);
+  const res = await fetch(`https://api.themoviedb.org/3/${path}?${query}`, isBearer ? {headers:{Authorization:`Bearer ${key}`}} : {});
+  if(!res.ok) throw new Error(`TMDb ${res.status}`);
+  return res.json();
+}
+
+function detailsFromTmdb(d, mediaType){
+  let director = '';
+  if(d.credits?.crew){
+    const directors = d.credits.crew.filter(c => c.job === 'Director').slice(0,2);
+    director = directors.map(c=>c.name).join(', ');
+  }
+  if(!director && d.created_by?.length) director = d.created_by.map(c=>c.name).join(', ');
+  return {
+    tmdbId: d.id,
+    year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
+    public: d.vote_average ? Math.round(d.vote_average * 10) : null,
+    poster: d.poster_path ? `https://image.tmdb.org/t/p/w185${d.poster_path}` : '',
+    director,
+    actors: d.credits?.cast?.slice(0,3).map(a=>a.name).join(', ') || '',
+    type: mediaType === 'tv' ? 'seriál' : 'film'
+  };
+}
+
+async function enrichExistingEntries(){
+  if(enrichmentStarted || !getApiKey()) return;
+  enrichmentStarted = true;
+  const pending = data.filter(item => !item.tmdbId || !item.poster || !item.year || !item.director || !item.actors || item.public == null);
+  for(const item of pending){
+    try{
+      const mediaType = item.type === 'seriál' ? 'tv' : 'movie';
+      let tmdbId = item.tmdbId;
+      if(!tmdbId){
+        const search = await tmdbRequest(`search/${mediaType}`, {query:item.original || item.title});
+        const candidates = search.results || [];
+        const targetYear = Number(item.year);
+        const match = candidates.sort((a,b)=>{
+          if(!targetYear) return 0;
+          const ay = Number((a.release_date || a.first_air_date || '').slice(0,4));
+          const by = Number((b.release_date || b.first_air_date || '').slice(0,4));
+          return Math.abs(ay-targetYear) - Math.abs(by-targetYear);
+        })[0];
+        if(!match) continue;
+        tmdbId = match.id;
+      }
+      const details = await tmdbRequest(`${mediaType}/${tmdbId}`, {append_to_response:'credits'});
+      Object.assign(item, detailsFromTmdb(details, mediaType));
+      saveData(data);
+      applyFiltersAndRender();
+    }catch(err){
+      console.warn('Nepodarilo sa doplniť TMDb údaje pre', item.title, err);
+    }
+  }
+}
+enrichExistingEntries();
 </script>
 </body>
 </html>
