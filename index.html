@@ -482,30 +482,56 @@
 </div>
 
 <script>
-const SEED_DATA = [{"id": 1, "title": "Silo", "original": "", "milan": 90, "basa": null, "year": 2023, "type": "seriál", "genre": "Sci-Fi", "director": "Graham Yost", "actors": "Rebecca Ferguson, Common", "poster": "https://image.tmdb.org/t/p/w92/111.jpg", "public": 81}, {"id": 2, "title": "Oppenheimer", "original": "", "milan": 75, "basa": null, "year": 2023, "type": "film", "genre": "Drama", "director": "Christopher Nolan", "actors": "Cillian Murphy, Emily Blunt", "poster": "", "public": 81}, {"id": 16, "title": "Vykúpenie z väznice Shawshank", "original": "The Shawshank Redemption", "milan": 99, "basa": null, "year": 1994, "type": "film", "genre": "Drama", "director": "Frank Darabont", "actors": "Tim Robbins, Morgan Freeman", "poster": "", "public": 87}];
-
-const STORAGE_KEY = 'filmopolis-entries-v3';
+const API_URL = '/api/films';
 const APIKEY_STORAGE = 'filmopolis-tmdb-key';
 const DEFAULT_TMDB_KEY = '6e26182284c01e502fcbf2a0046199ee';
-
-function loadData(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
-  return SEED_DATA.slice();
-}
-function saveData(data){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
 function getApiKey(){ return localStorage.getItem(APIKEY_STORAGE) || DEFAULT_TMDB_KEY; }
 function setApiKey(k){ localStorage.setItem(APIKEY_STORAGE, k); }
 
-let data = loadData().map(item => {
+function applyLegacyRating(item){
   if(item.rating == null){
     const legacy = [item.milan, item.basa].filter(v => v != null && Number.isFinite(Number(v)));
     item.rating = legacy.length ? Math.round(legacy.reduce((a,b)=>a+Number(b),0) / legacy.length) : null;
   }
   return item;
-});
-saveData(data);
+}
+
+async function apiGetAll(){
+  const res = await fetch(API_URL);
+  if(!res.ok) throw new Error('API ' + res.status);
+  const list = await res.json();
+  return list.map(applyLegacyRating);
+}
+async function apiAdd(entry){
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(entry)
+  });
+  if(!res.ok) throw new Error('API ' + res.status);
+  return applyLegacyRating(await res.json());
+}
+async function apiPatch(patch){
+  const res = await fetch(API_URL, {
+    method:'PATCH',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(patch)
+  });
+  if(!res.ok) throw new Error('API ' + res.status);
+  return await res.json();
+}
+async function apiDelete(id){
+  const res = await fetch(API_URL, {
+    method:'DELETE',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ id })
+  });
+  if(!res.ok) throw new Error('API ' + res.status);
+  return await res.json();
+}
+
+let data = [];
 let state = { search:'', type:'all', sort:'rating-desc' };
 
 const rowsEl = document.getElementById('rows');
@@ -588,7 +614,7 @@ document.getElementById('typeToggle').addEventListener('click', e=>{
   state.type = btn.dataset.type;
   applyFiltersAndRender();
 });
-rowsEl.addEventListener('click', e=>{
+rowsEl.addEventListener('click', async e=>{
   const rate = e.target.closest('[data-rate]');
   if(rate){
     openRatingModal(Number(rate.dataset.rate));
@@ -597,9 +623,17 @@ rowsEl.addEventListener('click', e=>{
   const del = e.target.closest('[data-del]');
   if(del){
     const id = Number(del.dataset.del);
+    const prevData = data;
     data = data.filter(d => d.id !== id);
-    saveData(data);
     applyFiltersAndRender();
+    try{
+      await apiDelete(id);
+    }catch(err){
+      console.error('Zmazanie zlyhalo:', err);
+      data = prevData;
+      applyFiltersAndRender();
+      alert('Zmazanie sa nepodarilo — skontroluj pripojenie.');
+    }
   }
 });
 
@@ -618,18 +652,25 @@ function openRatingModal(id){
 function closeRatingModal(){ ratingOverlay.classList.remove('open'); }
 document.getElementById('ratingCancel').addEventListener('click', closeRatingModal);
 ratingOverlay.addEventListener('click', e=>{ if(e.target === ratingOverlay) closeRatingModal(); });
-document.getElementById('ratingForm').addEventListener('submit', e=>{
+document.getElementById('ratingForm').addEventListener('submit', async e=>{
   e.preventDefault();
   const item = data.find(d => d.id === Number(document.getElementById('ratingId').value));
   if(!item) return;
   const raw = ratingInput.value.trim();
   if(raw !== '' && (Number(raw) < 0 || Number(raw) > 100)) return;
-  item.rating = raw === '' ? null : Math.round(Number(raw));
-  delete item.milan;
-  delete item.basa;
-  saveData(data);
+  const newRating = raw === '' ? null : Math.round(Number(raw));
+  const prevRating = item.rating;
+  item.rating = newRating;
   applyFiltersAndRender();
   closeRatingModal();
+  try{
+    await apiPatch({ id: item.id, rating: newRating, milan: null, basa: null });
+  }catch(err){
+    console.error('Uloženie hodnotenia zlyhalo:', err);
+    item.rating = prevRating;
+    applyFiltersAndRender();
+    alert('Uloženie hodnotenia sa nepodarilo — skontroluj pripojenie.');
+  }
 });
 
 /* Modal správa pre tlačidlo + Pridať hodnotenie */
@@ -731,9 +772,7 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
       actors = d.credits.cast.slice(0, 3).map(a=>a.name).join(', ');
     }
 
-    const nextId = data.length ? Math.max(...data.map(x=>x.id))+1 : 1;
     const entry = {
-      id: nextId,
       title: d.title || d.name,
       original: d.original_title || d.original_name || '',
       type: mediaType === 'tv' ? 'seriál' : 'film',
@@ -745,10 +784,10 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
       actors: actors,
       tmdbId: Number(tmdbId)
     };
-    data.push(entry);
-    saveData(data);
+    const saved = await apiAdd(entry);
+    data.push(saved);
     applyFiltersAndRender();
-    if(onSuccess) onSuccess(entry);
+    if(onSuccess) onSuccess(saved);
   } catch(err) {
     console.error(err);
   }
@@ -813,9 +852,17 @@ document.addEventListener('click', e => {
   }
 });
 
-applyFiltersAndRender();
-
-/* Doplnenie TMDb údajov pri starších uložených tituloch */
+(async function init(){
+  try{
+    data = await apiGetAll();
+  }catch(err){
+    console.error('Nepodarilo sa načítať dáta zo servera:', err);
+    rowsEl.innerHTML = `<div class="empty-state"><b>Databáza nedostupná</b>Skontroluj internetové pripojenie alebo funkciu /api/films.</div>`;
+    return;
+  }
+  applyFiltersAndRender();
+  enrichExistingEntries();
+})();
 let enrichmentStarted = false;
 async function tmdbRequest(path, params={}){
   const key = getApiKey();
@@ -868,15 +915,15 @@ async function enrichExistingEntries(){
         tmdbId = match.id;
       }
       const details = await tmdbRequest(`${mediaType}/${tmdbId}`, {append_to_response:'credits'});
-      Object.assign(item, detailsFromTmdb(details, mediaType));
-      saveData(data);
+      const patch = detailsFromTmdb(details, mediaType);
+      Object.assign(item, patch);
       applyFiltersAndRender();
+      await apiPatch({ id: item.id, ...patch });
     }catch(err){
       console.warn('Nepodarilo sa doplniť TMDb údaje pre', item.title, err);
     }
   }
 }
-enrichExistingEntries();
 </script>
 </body>
 </html>
