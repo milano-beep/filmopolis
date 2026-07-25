@@ -312,41 +312,20 @@
     font-weight: 500;
   }
 
-  /* Spoločné hodnotenie */
-  .ratings-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .ratings-row {
-    display: flex;
-    gap: 8px;
-  }
-
-  .rating-box {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    flex: 1;
-    min-width: 0;
-    background: var(--bg-main);
-    border-radius: 10px;
-    padding: 8px 10px;
-  }
-  .rating-box .label {
-    font-size: 0.62rem;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    font-weight: 600;
-  }
-  .rating-box .val {
-    font-size: 0.95rem;
+  /* Odznak s hodnotením na plagáte */
+  .rating-badge {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    background: rgba(15,23,42,0.82);
+    color: #ffffff;
+    font-size: 0.85rem;
     font-weight: 700;
-    color: var(--accent-blue);
+    padding: 4px 9px;
+    border-radius: 8px;
+    backdrop-filter: blur(2px);
+    letter-spacing: 0.01em;
   }
-  .rating-box .val.tmdb { color: #9a6b00; }
 
   .rate-btn {
     background: #e8f2ff;
@@ -359,6 +338,7 @@
     cursor: pointer;
     white-space: nowrap;
     width: 100%;
+    margin-top: 12px;
   }
   .rate-btn:hover { background: #dcecff; }
 
@@ -649,10 +629,11 @@ function rowHTML(item){
   const posterInner = item.poster
     ? `<img src="${item.poster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'">`
     : `<div class="poster-placeholder">Bez náhľadu</div>`;
+  const ratingBadge = combined != null ? `<span class="rating-badge">${combined}%</span>` : '';
   const tmdbUrl = item.tmdbId ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
   const posterHTML = tmdbUrl
-    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="Otvoriť na TMDb">${posterInner}</a>`
-    : `<div class="poster-frame">${posterInner}</div>`;
+    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="Otvoriť na TMDb">${posterInner}${ratingBadge}</a>`
+    : `<div class="poster-frame">${posterInner}${ratingBadge}</div>`;
 
   return `
   <div class="row-card" data-id="${item.id}">
@@ -670,19 +651,7 @@ function rowHTML(item){
           <span class="meta-item"><b>Hrajú:</b> ${item.actors ? escapeHTML(item.actors) : '—'}</span>
         </div>
       </div>
-      <div class="ratings-group">
-        <div class="ratings-row">
-          <div class="rating-box">
-            <span class="label">Spoločné</span>
-            <span class="val">${combined != null ? combined + '%' : '—'}</span>
-          </div>
-          <div class="rating-box">
-            <span class="label">TMDb</span>
-            <span class="val tmdb">${item.public != null ? item.public + '%' : '—'}</span>
-          </div>
-        </div>
-        <button class="rate-btn" data-rate="${item.id}">${combined == null ? 'Pridať hodnotenie' : 'Upraviť'}</button>
-      </div>
+      <button class="rate-btn" data-rate="${item.id}">${combined == null ? 'Pridať hodnotenie' : 'Upraviť hodnotenie'}</button>
     </div>
   </div>`;
 }
