@@ -190,21 +190,24 @@
 
   /* Zoznam položiek s medzerami medzi kartami */
   .list-container {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
   }
+  @media (max-width: 1400px) { .list-container { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 1080px) { .list-container { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 760px)  { .list-container { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 480px)  { .list-container { grid-template-columns: 1fr; } }
 
   .row-card {
     display: flex;
-    align-items: center;
-    gap: 20px;
+    flex-direction: column;
     background: var(--card-bg);
     border-radius: var(--radius);
-    padding: 14px;
+    overflow: hidden;
     box-shadow: var(--card-shadow);
     border: 1px solid var(--border-color);
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
@@ -212,14 +215,22 @@
   }
   .row-card:hover {
     border-color: #d2d7de;
-    box-shadow: 0 8px 24px rgba(15,23,42,0.05);
+    box-shadow: 0 10px 26px rgba(15,23,42,0.08);
+    transform: translateY(-2px);
+  }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    padding: 12px 14px 14px;
+    flex: 1;
   }
 
   /* Náhľad na prvej pozícii */
   .poster-frame {
-    width: 64px;
-    height: 92px;
-    border-radius: 10px;
+    width: 100%;
+    aspect-ratio: 2 / 3;
+    border-radius: 0;
     overflow: hidden;
     background: #e9ecf0;
     flex-shrink: 0;
@@ -227,7 +238,7 @@
     position: relative;
     transition: opacity .15s;
   }
-  a.poster-frame:hover { opacity: 0.82; }
+  a.poster-frame:hover { opacity: 0.88; }
   .poster-thumb {
     width: 100%;
     height: 100%;
@@ -253,21 +264,23 @@
   .title-line {
     display: flex;
     align-items: baseline;
-    gap: 8px;
-    margin-bottom: 4px;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
   }
 
   .title {
-    font-size: 1.05rem;
+    font-size: 0.98rem;
     font-weight: 600;
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .type-pill {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     font-weight: 600;
     text-transform: uppercase;
     padding: 2px 6px;
@@ -278,13 +291,19 @@
   }
 
   .meta-line {
-    font-size: 0.8rem;
+    font-size: 0.74rem;
     color: var(--text-secondary);
     display: flex;
-    flex-wrap: wrap;
-    column-gap: 16px;
-    row-gap: 4px;
-    line-height: 1.45;
+    flex-direction: column;
+    gap: 3px;
+    line-height: 1.4;
+  }
+
+  .meta-item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
   .meta-item b {
@@ -295,28 +314,34 @@
   /* Spoločné hodnotenie */
   .ratings-group {
     display: flex;
-    gap: 10px;
-    align-items: center;
-    padding-left: 8px;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .ratings-row {
+    display: flex;
+    gap: 8px;
   }
 
   .rating-box {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    min-width: 74px;
+    flex: 1;
+    min-width: 0;
     background: var(--bg-main);
     border-radius: 10px;
-    padding: 9px 11px;
+    padding: 8px 10px;
   }
   .rating-box .label {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     text-transform: uppercase;
     color: var(--text-secondary);
     font-weight: 600;
   }
   .rating-box .val {
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--accent-blue);
   }
@@ -332,6 +357,7 @@
     font-weight: 650;
     cursor: pointer;
     white-space: nowrap;
+    width: 100%;
   }
   .rate-btn:hover { background: #dcecff; }
 
@@ -422,13 +448,6 @@
     .toolbar { align-items: stretch; }
     .toolbar .field-search { flex-basis: 100%; }
     .tmdb-status { width: 100%; margin-left: 4px; }
-    .row-card { align-items: flex-start; gap: 13px; flex-wrap: wrap; }
-    .poster-frame { width: 56px; height: 82px; }
-    .main-info { width: calc(100% - 69px); flex: none; }
-    .ratings-group { width: 100%; padding: 0; }
-    .ratings-group .rating-box { flex: 1; }
-    .rate-btn { flex: 1.35; align-self: stretch; }
-    .del { align-self: center; }
   }
 </style>
 </head>
@@ -637,28 +656,32 @@ function rowHTML(item){
   return `
   <div class="row-card" data-id="${item.id}">
     ${posterHTML}
-    <div class="main-info">
-      <div class="title-line">
-        <span class="title">${escapeHTML(item.title)}</span>
-        <span class="type-pill">${item.type}</span>
+    <div class="card-body">
+      <div class="main-info">
+        <div class="title-line">
+          <span class="title">${escapeHTML(item.title)}</span>
+          <span class="type-pill">${item.type}</span>
+        </div>
+        <div class="meta-line">
+          <span class="meta-item"><b>Rok:</b> ${item.year || '—'}</span>
+          <span class="meta-item"><b>Žáner:</b> ${item.genre ? escapeHTML(item.genre) : '—'}</span>
+          <span class="meta-item"><b>Réžia:</b> ${item.director ? escapeHTML(item.director) : '—'}</span>
+          <span class="meta-item"><b>Hrajú:</b> ${item.actors ? escapeHTML(item.actors) : '—'}</span>
+        </div>
       </div>
-      <div class="meta-line">
-        <span class="meta-item"><b>Rok:</b> ${item.year || '—'}</span>
-        <span class="meta-item"><b>Žáner:</b> ${item.genre ? escapeHTML(item.genre) : '—'}</span>
-        <span class="meta-item"><b>Réžia:</b> ${item.director ? escapeHTML(item.director) : '—'}</span>
-        <span class="meta-item"><b>Hrajú:</b> ${item.actors ? escapeHTML(item.actors) : '—'}</span>
+      <div class="ratings-group">
+        <div class="ratings-row">
+          <div class="rating-box">
+            <span class="label">Spoločné</span>
+            <span class="val">${combined != null ? combined + '%' : '—'}</span>
+          </div>
+          <div class="rating-box">
+            <span class="label">TMDb</span>
+            <span class="val tmdb">${item.public != null ? item.public + '%' : '—'}</span>
+          </div>
+        </div>
+        <button class="rate-btn" data-rate="${item.id}">${combined == null ? 'Pridať hodnotenie' : 'Upraviť'}</button>
       </div>
-    </div>
-    <div class="ratings-group">
-      <div class="rating-box">
-        <span class="label">Spoločné</span>
-        <span class="val">${combined != null ? combined + '%' : '—'}</span>
-      </div>
-      <div class="rating-box">
-        <span class="label">TMDb</span>
-        <span class="val tmdb">${item.public != null ? item.public + '%' : '—'}</span>
-      </div>
-      <button class="rate-btn" data-rate="${item.id}">${combined == null ? 'Pridať hodnotenie' : 'Upraviť'}</button>
     </div>
   </div>`;
 }
