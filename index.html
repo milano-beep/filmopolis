@@ -115,6 +115,14 @@
 
   .btn.ghost { background: transparent; }
 
+  .btn.btn-danger {
+    background: #ff3b30;
+    color: #ffffff;
+    font-weight: 600;
+    border: none;
+  }
+  .btn.btn-danger:hover { background: #e0342b; }
+
   .type-toggle {
     display: flex;
     background: var(--bg-main);
@@ -149,6 +157,30 @@
   .tmdb-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-secondary); }
   .tmdb-status.on .dot { background: #34c759; }
 
+  .genre-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: -6px 0 18px;
+  }
+  .genre-pill {
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .genre-pill:hover { border-color: #c3c9d1; }
+  .genre-pill.active {
+    background: var(--accent-blue);
+    color: #ffffff;
+    border-color: var(--accent-blue);
+  }
+
   .count-line {
     font-size: 0.8rem;
     color: var(--text-secondary);
@@ -173,6 +205,10 @@
     box-shadow: var(--card-shadow);
     border: 1px solid var(--border-color);
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
   }
   .row-card:hover {
     border-color: #d2d7de;
@@ -187,7 +223,11 @@
     overflow: hidden;
     background: #e9ecf0;
     flex-shrink: 0;
+    display: block;
+    position: relative;
+    transition: opacity .15s;
   }
+  a.poster-frame:hover { opacity: 0.82; }
   .poster-thumb {
     width: 100%;
     height: 100%;
@@ -421,6 +461,8 @@
     <div class="tmdb-status" id="tmdbStatus"><span class="dot"></span><span id="tmdbStatusText">TMDb nepripojené</span></div>
   </div>
 
+  <div class="genre-pills" id="genrePills"></div>
+
   <p class="count-line" id="countLine"></p>
 
   <div class="list-container" id="rows"></div>
@@ -463,6 +505,18 @@
   </div>
 </div>
 
+<!-- Delete confirm modal -->
+<div class="overlay" id="deleteConfirmOverlay">
+  <div class="modal">
+    <h2>Vymazať titul?</h2>
+    <p class="sub">Naozaj chceš natrvalo odstrániť <strong id="deleteConfirmTitle"></strong>?</p>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="deleteConfirmCancel">Zrušiť</button>
+      <button type="button" class="btn btn-danger" id="deleteConfirmYes">Vymazať</button>
+    </div>
+  </div>
+</div>
+
 <!-- Settings modal -->
 <div class="overlay" id="settingsOverlay">
   <div class="modal">
@@ -498,7 +552,7 @@ function applyLegacyRating(item){
 }
 
 async function apiGetAll(){
-  const res = await fetch(API_URL);
+  const res = await fetch(API_URL, { cache: 'no-store' });
   if(!res.ok) throw new Error('API ' + res.status);
   const list = await res.json();
   return list.map(applyLegacyRating);
@@ -536,6 +590,29 @@ let state = { search:'', type:'all', sort:'rating-desc' };
 
 const rowsEl = document.getElementById('rows');
 const countLine = document.getElementById('countLine');
+const genrePillsEl = document.getElementById('genrePills');
+const activeGenres = new Set();
+
+function splitGenres(genreStr){
+  return (genreStr || '').split(',').map(g => g.trim()).filter(Boolean);
+}
+
+function renderGenrePills(){
+  const allGenres = new Set();
+  data.forEach(d => splitGenres(d.genre).forEach(g => allGenres.add(g)));
+  const sorted = Array.from(allGenres).sort((a,b)=>a.localeCompare(b,'sk'));
+  if(!sorted.length){ genrePillsEl.innerHTML = ''; return; }
+  genrePillsEl.innerHTML = sorted.map(g =>
+    `<button type="button" class="genre-pill${activeGenres.has(g) ? ' active' : ''}" data-genre="${escapeHTML(g)}">${escapeHTML(g)}</button>`
+  ).join('');
+}
+genrePillsEl.addEventListener('click', e=>{
+  const btn = e.target.closest('.genre-pill');
+  if(!btn) return;
+  const g = btn.dataset.genre;
+  if(activeGenres.has(g)) activeGenres.delete(g); else activeGenres.add(g);
+  applyFiltersAndRender();
+});
 
 function escapeHTML(s){
   return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
@@ -548,9 +625,13 @@ function getCombinedRating(item){
 
 function rowHTML(item){
   const combined = getCombinedRating(item);
-  const posterHTML = item.poster 
-    ? `<div class="poster-frame"><img src="${item.poster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'"></div>`
-    : `<div class="poster-frame"><div class="poster-placeholder">Bez náhľadu</div></div>`;
+  const posterInner = item.poster
+    ? `<img src="${item.poster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'">`
+    : `<div class="poster-placeholder">Bez náhľadu</div>`;
+  const tmdbUrl = item.tmdbId ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
+  const posterHTML = tmdbUrl
+    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="Otvoriť na TMDb">${posterInner}</a>`
+    : `<div class="poster-frame">${posterInner}</div>`;
 
   return `
   <div class="row-card" data-id="${item.id}">
@@ -562,6 +643,7 @@ function rowHTML(item){
       </div>
       <div class="meta-line">
         <span class="meta-item"><b>Rok:</b> ${item.year || '—'}</span>
+        <span class="meta-item"><b>Žáner:</b> ${item.genre ? escapeHTML(item.genre) : '—'}</span>
         <span class="meta-item"><b>Réžia:</b> ${item.director ? escapeHTML(item.director) : '—'}</span>
         <span class="meta-item"><b>Hrajú:</b> ${item.actors ? escapeHTML(item.actors) : '—'}</span>
       </div>
@@ -577,13 +659,16 @@ function rowHTML(item){
       </div>
       <button class="rate-btn" data-rate="${item.id}">${combined == null ? 'Pridať hodnotenie' : 'Upraviť'}</button>
     </div>
-    <button class="del" title="Odstrániť" data-del="${item.id}">✕</button>
   </div>`;
 }
 
 function applyFiltersAndRender(){
+  renderGenrePills();
   let list = data.slice();
   if(state.type !== 'all') list = list.filter(d => d.type === state.type);
+  if(activeGenres.size > 0){
+    list = list.filter(d => splitGenres(d.genre).some(g => activeGenres.has(g)));
+  }
   if(state.search.trim()){
     const q = state.search.trim().toLowerCase();
     list = list.filter(d => 
@@ -614,28 +699,82 @@ document.getElementById('typeToggle').addEventListener('click', e=>{
   state.type = btn.dataset.type;
   applyFiltersAndRender();
 });
-rowsEl.addEventListener('click', async e=>{
+rowsEl.addEventListener('click', e=>{
   const rate = e.target.closest('[data-rate]');
   if(rate){
     openRatingModal(Number(rate.dataset.rate));
     return;
   }
-  const del = e.target.closest('[data-del]');
-  if(del){
-    const id = Number(del.dataset.del);
-    const prevData = data;
-    data = data.filter(d => d.id !== id);
-    applyFiltersAndRender();
-    try{
-      await apiDelete(id);
-    }catch(err){
-      console.error('Zmazanie zlyhalo:', err);
-      data = prevData;
-      applyFiltersAndRender();
-      alert('Zmazanie sa nepodarilo — skontroluj pripojenie.');
-    }
-  }
 });
+
+async function performDelete(id){
+  const prevData = data;
+  data = data.filter(d => d.id !== id);
+  applyFiltersAndRender();
+  try{
+    await apiDelete(id);
+  }catch(err){
+    console.error('Zmazanie zlyhalo:', err);
+    data = prevData;
+    applyFiltersAndRender();
+    alert('Zmazanie sa nepodarilo — skontroluj pripojenie.');
+  }
+}
+
+/* Dlhé podržanie na riadku = potvrdenie zmazania */
+const deleteConfirmOverlay = document.getElementById('deleteConfirmOverlay');
+const deleteConfirmTitle = document.getElementById('deleteConfirmTitle');
+let pendingDeleteId = null;
+let longPressTimer = null;
+let longPressTriggered = false;
+
+function openDeleteConfirm(id){
+  const item = data.find(d => d.id === id);
+  if(!item) return;
+  pendingDeleteId = id;
+  deleteConfirmTitle.textContent = item.title;
+  deleteConfirmOverlay.classList.add('open');
+}
+function closeDeleteConfirm(){
+  deleteConfirmOverlay.classList.remove('open');
+  pendingDeleteId = null;
+}
+document.getElementById('deleteConfirmCancel').addEventListener('click', closeDeleteConfirm);
+document.getElementById('deleteConfirmYes').addEventListener('click', ()=>{
+  const id = pendingDeleteId;
+  closeDeleteConfirm();
+  if(id != null) performDelete(id);
+});
+deleteConfirmOverlay.addEventListener('click', e=>{ if(e.target === deleteConfirmOverlay) closeDeleteConfirm(); });
+
+function clearLongPress(){
+  clearTimeout(longPressTimer);
+  longPressTimer = null;
+}
+
+rowsEl.addEventListener('pointerdown', e=>{
+  const card = e.target.closest('.row-card');
+  if(!card) return;
+  if(e.target.closest('.rate-btn') || e.target.closest('a.poster-frame')) return;
+  longPressTriggered = false;
+  longPressTimer = setTimeout(()=>{
+    longPressTriggered = true;
+    openDeleteConfirm(Number(card.dataset.id));
+  }, 550);
+});
+['pointerup','pointerleave','pointercancel','pointermove'].forEach(evt=>{
+  rowsEl.addEventListener(evt, ()=> clearLongPress());
+});
+rowsEl.addEventListener('contextmenu', e=>{
+  if(e.target.closest('.row-card')) e.preventDefault();
+});
+rowsEl.addEventListener('click', e=>{
+  if(longPressTriggered){
+    e.preventDefault();
+    e.stopPropagation();
+    longPressTriggered = false;
+  }
+}, true);
 
 /* Jedno spoločné hodnotenie */
 const ratingOverlay = document.getElementById('ratingOverlay');
@@ -772,6 +911,8 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
       actors = d.credits.cast.slice(0, 3).map(a=>a.name).join(', ');
     }
 
+    const genre = (d.genres || []).map(g => g.name).join(', ');
+
     const entry = {
       title: d.title || d.name,
       original: d.original_title || d.original_name || '',
@@ -782,6 +923,7 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
       poster: d.poster_path ? `https://image.tmdb.org/t/p/w92${d.poster_path}` : '',
       director: director,
       actors: actors,
+      genre: genre,
       tmdbId: Number(tmdbId)
     };
     const saved = await apiAdd(entry);
@@ -889,6 +1031,7 @@ function detailsFromTmdb(d, mediaType){
     poster: d.poster_path ? `https://image.tmdb.org/t/p/w185${d.poster_path}` : '',
     director,
     actors: d.credits?.cast?.slice(0,3).map(a=>a.name).join(', ') || '',
+    genre: (d.genres || []).map(g => g.name).join(', '),
     type: mediaType === 'tv' ? 'seriál' : 'film'
   };
 }
@@ -896,7 +1039,7 @@ function detailsFromTmdb(d, mediaType){
 async function enrichExistingEntries(){
   if(enrichmentStarted || !getApiKey()) return;
   enrichmentStarted = true;
-  const pending = data.filter(item => !item.tmdbId || !item.poster || !item.year || !item.director || !item.actors || item.public == null);
+  const pending = data.filter(item => !item.tmdbId || !item.poster || !item.year || !item.director || !item.actors || !item.genre || item.public == null);
   for(const item of pending){
     try{
       const mediaType = item.type === 'seriál' ? 'tv' : 'movie';
