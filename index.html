@@ -333,6 +333,26 @@
     box-shadow: 0 3px 10px rgba(0,0,0,0.3);
   }
 
+  .provider-badge {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    width: 46px;
+    height: 46px;
+    border-radius: 8px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  }
+  .provider-badge img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
   .rate-btn {
     background: #e8f2ff;
     color: var(--accent-blue);
@@ -636,10 +656,13 @@ function rowHTML(item){
     ? `<img src="${item.poster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'">`
     : `<div class="poster-placeholder">Bez náhľadu</div>`;
   const ratingBadge = combined != null ? `<span class="rating-badge">${combined}%</span>` : '';
+  const providerBadge = item.providerLogo
+    ? `<span class="provider-badge" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${item.providerLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
+    : '';
   const tmdbUrl = item.tmdbId ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
   const posterHTML = tmdbUrl
-    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="Otvoriť na TMDb">${posterInner}${ratingBadge}</a>`
-    : `<div class="poster-frame">${posterInner}${ratingBadge}</div>`;
+    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="Otvoriť na TMDb">${posterInner}${providerBadge}${ratingBadge}</a>`
+    : `<div class="poster-frame">${posterInner}${providerBadge}${ratingBadge}</div>`;
 
   return `
   <div class="row-card" data-id="${item.id}">
@@ -893,8 +916,8 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
   const isBearer = key.startsWith('eyJ');
   try {
     const detailUrl = isBearer
-      ? `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?append_to_response=credits&language=sk-SK`
-      : `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${encodeURIComponent(key)}&append_to_response=credits&language=sk-SK`;
+      ? `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?append_to_response=credits,watch/providers&language=sk-SK`
+      : `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${encodeURIComponent(key)}&append_to_response=credits,watch/providers&language=sk-SK`;
     const res = await fetch(detailUrl, isBearer ? { headers:{ Authorization:`Bearer ${key}` } } : {});
     const d = await res.json();
 
@@ -913,6 +936,7 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
     }
 
     const genre = (d.genres || []).map(g => g.name).join(', ');
+    const provider = extractProvider(d);
 
     const entry = {
       title: d.title || d.name,
@@ -925,6 +949,8 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
       director: director,
       actors: actors,
       genre: genre,
+      providerName: provider.providerName,
+      providerLogo: provider.providerLogo,
       tmdbId: Number(tmdbId)
     };
     const saved = await apiAdd(entry);
@@ -1018,6 +1044,20 @@ async function tmdbRequest(path, params={}){
   return res.json();
 }
 
+function extractProvider(d){
+  const wp = d['watch/providers']?.results;
+  if(!wp) return { providerName: '', providerLogo: '' };
+  const region = wp.SK || wp.CZ || wp.AT || wp.US || Object.values(wp)[0];
+  if(!region) return { providerName: '', providerLogo: '' };
+  const list = region.flatrate || region.free || region.ads || region.rent || region.buy;
+  if(!list || !list.length) return { providerName: '', providerLogo: '' };
+  const p = list[0];
+  return {
+    providerName: p.provider_name || '',
+    providerLogo: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : ''
+  };
+}
+
 function detailsFromTmdb(d, mediaType){
   let director = '';
   if(d.credits?.crew){
@@ -1025,6 +1065,7 @@ function detailsFromTmdb(d, mediaType){
     director = directors.map(c=>c.name).join(', ');
   }
   if(!director && d.created_by?.length) director = d.created_by.map(c=>c.name).join(', ');
+  const provider = extractProvider(d);
   return {
     tmdbId: d.id,
     year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
@@ -1033,6 +1074,8 @@ function detailsFromTmdb(d, mediaType){
     director,
     actors: d.credits?.cast?.slice(0,3).map(a=>a.name).join(', ') || '',
     genre: (d.genres || []).map(g => g.name).join(', '),
+    providerName: provider.providerName,
+    providerLogo: provider.providerLogo,
     type: mediaType === 'tv' ? 'seriál' : 'film'
   };
 }
@@ -1040,7 +1083,7 @@ function detailsFromTmdb(d, mediaType){
 async function enrichExistingEntries(){
   if(enrichmentStarted || !getApiKey()) return;
   enrichmentStarted = true;
-  const pending = data.filter(item => !item.tmdbId || !item.poster || !item.year || !item.director || !item.actors || !item.genre || item.public == null);
+  const pending = data.filter(item => !item.tmdbId || !item.poster || !item.year || !item.director || !item.actors || !item.genre || item.public == null || item.providerLogo == null);
   for(const item of pending){
     try{
       const mediaType = item.type === 'seriál' ? 'tv' : 'movie';
@@ -1058,7 +1101,7 @@ async function enrichExistingEntries(){
         if(!match) continue;
         tmdbId = match.id;
       }
-      const details = await tmdbRequest(`${mediaType}/${tmdbId}`, {append_to_response:'credits'});
+      const details = await tmdbRequest(`${mediaType}/${tmdbId}`, {append_to_response:'credits,watch/providers'});
       const patch = detailsFromTmdb(details, mediaType);
       Object.assign(item, patch);
       applyFiltersAndRender();
