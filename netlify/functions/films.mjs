@@ -6,6 +6,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, DELETE, PATCH, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
+  "Cache-Control": "no-store, no-cache, must-revalidate",
 };
 
 function json(body, status = 200) {
@@ -20,7 +21,7 @@ export default async (req) => {
     return new Response(null, { status: 204, headers: CORS_HEADERS });
   }
 
-  const store = getStore("filmopolis");
+  const store = getStore("filmopolis", { consistency: "strong" });
 
   if (req.method === "GET") {
     let films = await store.get("films", { type: "json" });
