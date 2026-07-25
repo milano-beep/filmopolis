@@ -451,6 +451,7 @@
       <button data-type="seriál">Seriály</button>
     </div>
     <select id="sortSel">
+      <option value="added-desc">Naposledy pridané</option>
       <option value="rating-desc">Hodnotenie ↓</option>
       <option value="rating-asc">Hodnotenie ↑</option>
       <option value="year-desc">Rok ↓</option>
@@ -586,7 +587,7 @@ async function apiDelete(id){
 }
 
 let data = [];
-let state = { search:'', type:'all', sort:'rating-desc' };
+let state = { search:'', type:'all', sort:'added-desc' };
 
 const rowsEl = document.getElementById('rows');
 const countLine = document.getElementById('countLine');
@@ -679,6 +680,7 @@ function applyFiltersAndRender(){
     );
   }
   switch(state.sort){
+    case 'added-desc': list.sort((a,b)=>b.id-a.id); break;
     case 'rating-desc': list.sort((a,b)=>(getCombinedRating(b)??-1)-(getCombinedRating(a)??-1)); break;
     case 'rating-asc': list.sort((a,b)=>(getCombinedRating(a)??101)-(getCombinedRating(b)??101)); break;
     case 'year-desc': list.sort((a,b)=>(b.year??0)-(a.year??0)); break;
