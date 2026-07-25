@@ -191,13 +191,14 @@
   /* Zoznam položiek s medzerami medzi kartami */
   .list-container {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 18px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 16px;
   }
-  @media (max-width: 1400px) { .list-container { grid-template-columns: repeat(4, 1fr); } }
-  @media (max-width: 1080px) { .list-container { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 760px)  { .list-container { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 480px)  { .list-container { grid-template-columns: 1fr; } }
+  @media (max-width: 1500px) { .list-container { grid-template-columns: repeat(6, 1fr); } }
+  @media (max-width: 1180px) { .list-container { grid-template-columns: repeat(5, 1fr); } }
+  @media (max-width: 900px)  { .list-container { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 680px)  { .list-container { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 480px)  { .list-container { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
 
   .row-card {
     display: flex;
