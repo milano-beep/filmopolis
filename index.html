@@ -312,6 +312,22 @@
     font-weight: 500;
   }
 
+  .ai-summary {
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+    margin: 8px 0 0;
+    white-space: pre-line;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .ai-summary.ai-pending {
+    font-style: italic;
+    opacity: 0.7;
+  }
+
   /* Odznak s hodnotením na plagáte */
   .rating-badge {
     position: absolute;
@@ -602,6 +618,49 @@ async function apiPatch(patch){
   if(!res.ok) throw new Error('API ' + res.status);
   return await res.json();
 }
+
+function computeTasteProfile(){
+  const rated = data.filter(d => getCombinedRating(d) != null && getCombinedRating(d) >= 80);
+  const counts = {};
+  rated.forEach(d => splitGenres(d.genre).forEach(g => { counts[g] = (counts[g]||0) + 1; }));
+  const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([g])=>g);
+  return top.join(', ');
+}
+
+async function apiAiEnrich(payload){
+  const res = await fetch('/api/ai-enrich', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if(!res.ok) throw new Error(data.error || ('AI ' + res.status));
+  return data.text;
+}
+
+async function generateAiSummaryFor(item){
+  item._aiPending = true;
+  applyFiltersAndRender();
+  try{
+    const text = await apiAiEnrich({
+      title: item.title,
+      original: item.original,
+      year: item.year,
+      type: item.type,
+      genre: item.genre,
+      director: item.director,
+      actors: item.actors,
+      tasteProfile: computeTasteProfile()
+    });
+    item.aiSummary = text;
+    await apiPatch({ id: item.id, aiSummary: text });
+  }catch(err){
+    console.warn('AI popis sa nepodarilo vygenerovať pre', item.title, err);
+  }finally{
+    item._aiPending = false;
+    applyFiltersAndRender();
+  }
+}
 async function apiDelete(id){
   const res = await fetch(API_URL, {
     method:'DELETE',
@@ -679,6 +738,8 @@ function rowHTML(item){
           <span class="meta-item"><b>Réžia:</b> ${item.director ? escapeHTML(item.director) : '—'}</span>
           <span class="meta-item"><b>Hrajú:</b> ${item.actors ? escapeHTML(item.actors) : '—'}</span>
         </div>
+        ${item._aiPending ? `<p class="ai-summary ai-pending">✨ Generujem AI popis…</p>` : ''}
+        ${!item._aiPending && item.aiSummary ? `<p class="ai-summary">${escapeHTML(item.aiSummary)}</p>` : ''}
       </div>
       <button class="rate-btn" data-rate="${item.id}">${combined == null ? 'Pridať hodnotenie' : 'Upraviť hodnotenie'}</button>
     </div>
@@ -957,6 +1018,7 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
     data.push(saved);
     applyFiltersAndRender();
     if(onSuccess) onSuccess(saved);
+    generateAiSummaryFor(saved);
   } catch(err) {
     console.error(err);
   }
@@ -1109,6 +1171,10 @@ async function enrichExistingEntries(){
     }catch(err){
       console.warn('Nepodarilo sa doplniť TMDb údaje pre', item.title, err);
     }
+  }
+  const pendingAi = data.filter(item => !item.aiSummary && !item._aiPending);
+  for(const item of pendingAi){
+    await generateAiSummaryFor(item);
   }
 }
 </script>
