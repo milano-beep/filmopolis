@@ -641,6 +641,7 @@ async function apiAiEnrich(payload){
 async function generateAiSummaryFor(item){
   item._aiPending = true;
   applyFiltersAndRender();
+  let ok = true;
   try{
     const text = await apiAiEnrich({
       title: item.title,
@@ -655,11 +656,13 @@ async function generateAiSummaryFor(item){
     item.aiSummary = text;
     await apiPatch({ id: item.id, aiSummary: text });
   }catch(err){
+    ok = false;
     console.warn('AI popis sa nepodarilo vygenerovať pre', item.title, err);
   }finally{
     item._aiPending = false;
     applyFiltersAndRender();
   }
+  return ok;
 }
 async function apiDelete(id){
   const res = await fetch(API_URL, {
@@ -1174,7 +1177,8 @@ async function enrichExistingEntries(){
   }
   const pendingAi = data.filter(item => !item.aiSummary && !item._aiPending);
   for(const item of pendingAi){
-    await generateAiSummaryFor(item);
+    const ok = await generateAiSummaryFor(item);
+    await new Promise(r => setTimeout(r, ok ? 4000 : 15000));
   }
 }
 </script>
