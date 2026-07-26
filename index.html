@@ -312,20 +312,11 @@
     font-weight: 500;
   }
 
-  .ai-summary {
-    font-size: 0.76rem;
-    color: var(--text-secondary);
-    line-height: 1.4;
-    margin: 8px 0 0;
+  .ai-modal-body {
+    font-size: 0.92rem;
+    color: var(--text-primary);
+    line-height: 1.55;
     white-space: pre-line;
-    display: -webkit-box;
-    -webkit-line-clamp: 5;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .ai-summary.ai-pending {
-    font-style: italic;
-    opacity: 0.7;
   }
 
   /* Odznak s hodnotením na plagáte */
@@ -382,6 +373,22 @@
     width: 100%;
     margin-top: 12px;
   }
+
+  .ai-btn {
+    background: #f3edff;
+    color: #6d3fd1;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 0.78rem;
+    font-weight: 650;
+    cursor: pointer;
+    white-space: nowrap;
+    width: 100%;
+    margin-top: 8px;
+  }
+  .ai-btn:hover { background: #e8ddff; }
+  .ai-btn:disabled { opacity: 0.6; cursor: default; }
   .rate-btn:hover { background: #dcecff; }
 
   .del {
@@ -560,6 +567,17 @@
   </div>
 </div>
 
+<!-- AI summary modal -->
+<div class="overlay" id="aiOverlay">
+  <div class="modal">
+    <h2 id="aiModalTitle">✨ AI popis</h2>
+    <p class="ai-modal-body" id="aiModalBody">Generujem…</p>
+    <div class="modal-actions">
+      <button type="button" class="btn" id="aiModalClose">Zavrieť</button>
+    </div>
+  </div>
+</div>
+
 <!-- Settings modal -->
 <div class="overlay" id="settingsOverlay">
   <div class="modal">
@@ -581,6 +599,15 @@
 <script>
 const API_URL = '/api/films';
 const APIKEY_STORAGE = 'filmopolis-tmdb-key';
+const AI_COOLDOWN_KEY = 'filmopolis-ai-cooldown-until';
+
+function isAiOnCooldown(){
+  const until = Number(localStorage.getItem(AI_COOLDOWN_KEY) || 0);
+  return Date.now() < until;
+}
+function setAiCooldown(ms){
+  localStorage.setItem(AI_COOLDOWN_KEY, String(Date.now() + ms));
+}
 const DEFAULT_TMDB_KEY = '6e26182284c01e502fcbf2a0046199ee';
 
 function getApiKey(){ return localStorage.getItem(APIKEY_STORAGE) || DEFAULT_TMDB_KEY; }
@@ -639,6 +666,7 @@ async function apiAiEnrich(payload){
 }
 
 async function generateAiSummaryFor(item){
+  if(isAiOnCooldown()) return false;
   item._aiPending = true;
   applyFiltersAndRender();
   let ok = true;
@@ -657,6 +685,9 @@ async function generateAiSummaryFor(item){
     await apiPatch({ id: item.id, aiSummary: text });
   }catch(err){
     ok = false;
+    if(/quota|rate limit|429/i.test(String(err))){
+      setAiCooldown(90000);
+    }
     console.warn('AI popis sa nepodarilo vygenerovať pre', item.title, err);
   }finally{
     item._aiPending = false;
@@ -741,10 +772,9 @@ function rowHTML(item){
           <span class="meta-item"><b>Réžia:</b> ${item.director ? escapeHTML(item.director) : '—'}</span>
           <span class="meta-item"><b>Hrajú:</b> ${item.actors ? escapeHTML(item.actors) : '—'}</span>
         </div>
-        ${item._aiPending ? `<p class="ai-summary ai-pending">✨ Generujem AI popis…</p>` : ''}
-        ${!item._aiPending && item.aiSummary ? `<p class="ai-summary">${escapeHTML(item.aiSummary)}</p>` : ''}
       </div>
       <button class="rate-btn" data-rate="${item.id}">${combined == null ? 'Pridať hodnotenie' : 'Upraviť hodnotenie'}</button>
+      <button class="ai-btn" data-ai="${item.id}" ${item._aiPending ? 'disabled' : ''}>${item._aiPending ? '⏳ Generujem…' : (item.aiSummary ? '✨ AI popis' : '✨ Vygenerovať AI popis')}</button>
     </div>
   </div>`;
 }
@@ -793,7 +823,44 @@ rowsEl.addEventListener('click', e=>{
     openRatingModal(Number(rate.dataset.rate));
     return;
   }
+  const ai = e.target.closest('[data-ai]');
+  if(ai){
+    openAiModal(Number(ai.dataset.ai));
+    return;
+  }
 });
+
+const aiOverlay = document.getElementById('aiOverlay');
+const aiModalTitle = document.getElementById('aiModalTitle');
+const aiModalBody = document.getElementById('aiModalBody');
+document.getElementById('aiModalClose').addEventListener('click', ()=> aiOverlay.classList.remove('open'));
+aiOverlay.addEventListener('click', e=>{ if(e.target === aiOverlay) aiOverlay.classList.remove('open'); });
+
+async function openAiModal(id){
+  const item = data.find(d => d.id === id);
+  if(!item) return;
+  aiModalTitle.textContent = `✨ ${item.title}`;
+  aiOverlay.classList.add('open');
+
+  if(item.aiSummary){
+    aiModalBody.textContent = item.aiSummary;
+    return;
+  }
+  if(isAiOnCooldown()){
+    aiModalBody.textContent = 'Gemini momentálne odpočíva (dosiahnutý limit požiadaviek) — skús to o minútu-dve znova.';
+    return;
+  }
+  aiModalBody.textContent = 'Generujem…';
+  const ok = await generateAiSummaryFor(item);
+  if(!aiOverlay.classList.contains('open')) return;
+  if(ok && item.aiSummary){
+    aiModalBody.textContent = item.aiSummary;
+  } else if(isAiOnCooldown()){
+    aiModalBody.textContent = 'Gemini momentálne odpočíva (dosiahnutý limit požiadaviek) — skús to o minútu-dve znova.';
+  } else {
+    aiModalBody.textContent = 'Nepodarilo sa vygenerovať popis — skús to prosím znova.';
+  }
+}
 
 async function performDelete(id){
   const prevData = data;
@@ -1021,7 +1088,6 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
     data.push(saved);
     applyFiltersAndRender();
     if(onSuccess) onSuccess(saved);
-    generateAiSummaryFor(saved);
   } catch(err) {
     console.error(err);
   }
@@ -1174,11 +1240,6 @@ async function enrichExistingEntries(){
     }catch(err){
       console.warn('Nepodarilo sa doplniť TMDb údaje pre', item.title, err);
     }
-  }
-  const pendingAi = data.filter(item => !item.aiSummary && !item._aiPending);
-  for(const item of pendingAi){
-    const ok = await generateAiSummaryFor(item);
-    await new Promise(r => setTimeout(r, ok ? 4000 : 15000));
   }
 }
 </script>
