@@ -204,7 +204,7 @@
     display: flex;
     flex-direction: column;
     background: var(--card-bg);
-    border-radius: var(--radius);
+    border-radius: 14px;
     overflow: hidden;
     box-shadow: var(--card-shadow);
     border: 1px solid var(--border-color);
@@ -220,18 +220,11 @@
     transform: translateY(-2px);
   }
 
-  .card-body {
-    display: flex;
-    flex-direction: column;
-    padding: 12px 14px 14px;
-    flex: 1;
-  }
-
   /* Náhľad na prvej pozícii */
   .poster-frame {
     width: 100%;
     aspect-ratio: 2 / 3;
-    border-radius: 0;
+    border-radius: 14px 14px 0 0;
     overflow: hidden;
     background: #e9ecf0;
     flex-shrink: 0;
@@ -251,65 +244,11 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.62rem;
+    font-size: 0.72rem;
+    font-weight: 600;
     color: var(--text-secondary);
     text-align: center;
-    padding: 8px;
-  }
-
-  .main-info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .title-line {
-    display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 6px;
-  }
-
-  .title {
-    font-size: 0.98rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-
-  .type-pill {
-    font-size: 0.62rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: var(--bg-main);
-    color: var(--text-secondary);
-    letter-spacing: 0.05em;
-  }
-
-  .meta-line {
-    font-size: 0.74rem;
-    color: var(--text-secondary);
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    line-height: 1.4;
-  }
-
-  .meta-item {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-
-  .meta-item b {
-    color: var(--text-primary);
-    font-weight: 500;
+    padding: 10px;
   }
 
   .ai-modal-body {
@@ -319,77 +258,46 @@
     white-space: pre-line;
   }
 
-  /* Odznak s hodnotením na plagáte */
-  .rating-badge {
-    position: absolute;
-    bottom: 8px;
-    right: 8px;
-    background: #e8362b;
-    color: #ffffff;
-    font-size: 1rem;
-    font-weight: 800;
-    min-width: 46px;
-    height: 46px;
-    padding: 0 6px;
-    box-sizing: border-box;
-    border-radius: 8px;
+  /* Riadok ikoniek pod plagátom */
+  .icon-row {
     display: flex;
     align-items: center;
-    justify-content: center;
-    letter-spacing: 0.01em;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    justify-content: space-between;
+    gap: 6px;
+    padding: 8px;
   }
 
-  .provider-badge {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-    width: 46px;
-    height: 46px;
-    border-radius: 8px;
-    background: #ffffff;
+  .icon-chip {
+    flex: 1;
+    height: 34px;
+    border-radius: 9px;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: 0;
+    cursor: pointer;
     overflow: hidden;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
-  }
-  .provider-badge img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    padding: 0;
   }
 
-  .rate-btn {
-    background: #e8f2ff;
-    color: var(--accent-blue);
-    border: 0;
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 0.78rem;
-    font-weight: 650;
-    cursor: pointer;
-    white-space: nowrap;
-    width: 100%;
-    margin-top: 12px;
-  }
+  .rating-chip { color: #e8362b; }
+  .rating-chip:hover { background: #fbe3e0; }
 
-  .ai-btn {
-    background: #f3edff;
-    color: #6d3fd1;
-    border: 0;
-    border-radius: 10px;
-    padding: 10px 12px;
-    font-size: 0.78rem;
-    font-weight: 650;
-    cursor: pointer;
-    white-space: nowrap;
-    width: 100%;
-    margin-top: 8px;
+  .provider-chip {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    cursor: default;
   }
-  .ai-btn:hover { background: #e8ddff; }
-  .ai-btn:disabled { opacity: 0.6; cursor: default; }
-  .rate-btn:hover { background: #dcecff; }
+  .provider-chip img { width: 100%; height: 100%; object-fit: cover; }
+  .provider-chip.empty { color: var(--text-secondary); font-weight: 400; }
+
+  .ai-chip { color: #6d3fd1; }
+  .ai-chip:hover { background: #ece2ff; }
+  .ai-chip.pending { opacity: 0.6; cursor: default; }
 
   .del {
     background: none; border: none;
@@ -747,34 +655,27 @@ function rowHTML(item){
   const combined = getCombinedRating(item);
   const posterInner = item.poster
     ? `<img src="${item.poster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'">`
-    : `<div class="poster-placeholder">Bez náhľadu</div>`;
-  const ratingBadge = combined != null ? `<span class="rating-badge">${combined}%</span>` : '';
-  const providerBadge = item.providerLogo
-    ? `<span class="provider-badge" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${item.providerLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
-    : '';
+    : `<div class="poster-placeholder">${escapeHTML(item.title)}</div>`;
   const tmdbUrl = item.tmdbId ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
   const posterHTML = tmdbUrl
-    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="Otvoriť na TMDb">${posterInner}${providerBadge}${ratingBadge}</a>`
-    : `<div class="poster-frame">${posterInner}${providerBadge}${ratingBadge}</div>`;
+    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}</a>`
+    : `<div class="poster-frame" title="${escapeHTML(item.title)}">${posterInner}</div>`;
+
+  const ratingChip = `<button class="icon-chip rating-chip" data-rate="${item.id}" title="${combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie'}">${combined != null ? combined + '%' : '☆'}</button>`;
+
+  const providerChip = item.providerLogo
+    ? `<span class="icon-chip provider-chip" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${item.providerLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
+    : `<span class="icon-chip provider-chip empty" title="Nezistené, kde sledovať">—</span>`;
+
+  const aiChip = `<button class="icon-chip ai-chip${item._aiPending ? ' pending' : ''}" data-ai="${item.id}" title="AI popis" ${item._aiPending ? 'disabled' : ''}>${item._aiPending ? '⏳' : '✨'}</button>`;
 
   return `
   <div class="row-card" data-id="${item.id}">
     ${posterHTML}
-    <div class="card-body">
-      <div class="main-info">
-        <div class="title-line">
-          <span class="title">${escapeHTML(item.title)}</span>
-          <span class="type-pill">${item.type}</span>
-        </div>
-        <div class="meta-line">
-          <span class="meta-item"><b>Rok:</b> ${item.year || '—'}</span>
-          <span class="meta-item"><b>Žáner:</b> ${item.genre ? escapeHTML(item.genre) : '—'}</span>
-          <span class="meta-item"><b>Réžia:</b> ${item.director ? escapeHTML(item.director) : '—'}</span>
-          <span class="meta-item"><b>Hrajú:</b> ${item.actors ? escapeHTML(item.actors) : '—'}</span>
-        </div>
-      </div>
-      <button class="rate-btn" data-rate="${item.id}">${combined == null ? 'Pridať hodnotenie' : 'Upraviť hodnotenie'}</button>
-      <button class="ai-btn" data-ai="${item.id}" ${item._aiPending ? 'disabled' : ''}>${item._aiPending ? '⏳ Generujem…' : (item.aiSummary ? '✨ AI popis' : '✨ Vygenerovať AI popis')}</button>
+    <div class="icon-row">
+      ${ratingChip}
+      ${providerChip}
+      ${aiChip}
     </div>
   </div>`;
 }
