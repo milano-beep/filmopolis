@@ -85,7 +85,10 @@ async function ensureFreshToken(env) {
 
   const res = await fetch(`${TRAKT_API}/oauth/token`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Mozilla/5.0 (compatible; Filmopolis/1.0; +https://filmopolis.filmopolis2.workers.dev)",
+    },
     body: JSON.stringify({
       refresh_token: tokens.refresh_token,
       client_id: env.TRAKT_CLIENT_ID,
@@ -117,7 +120,10 @@ async function handleOAuthCallback(request, env) {
 
   const res = await fetch(`${TRAKT_API}/oauth/token`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "User-Agent": "Mozilla/5.0 (compatible; Filmopolis/1.0; +https://filmopolis.filmopolis2.workers.dev)",
+    },
     body: JSON.stringify({
       code,
       client_id: env.TRAKT_CLIENT_ID,
@@ -147,6 +153,7 @@ async function traktFetch(path, env, tokens) {
   const res = await fetch(`${TRAKT_API}${path}`, {
     headers: {
       "Content-Type": "application/json",
+      "User-Agent": "Mozilla/5.0 (compatible; Filmopolis/1.0; +https://filmopolis.filmopolis2.workers.dev)",
       "trakt-api-version": "2",
       "trakt-api-key": env.TRAKT_CLIENT_ID,
       Authorization: `Bearer ${tokens.access_token}`,
