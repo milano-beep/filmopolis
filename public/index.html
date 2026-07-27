@@ -871,7 +871,7 @@ document.getElementById('ratingForm').addEventListener('submit', async e=>{
 
 /* Modal správa pre tlačidlo + Pridať hodnotenie */
 const overlay = document.getElementById('overlay');
-document.getElementById('addBtn').addEventListener('click', ()=>{ overlay.classList.add('open'); document.getElementById('f-title').focus(); });
+// addBtn removed
 document.getElementById('cancelBtn').addEventListener('click', ()=>{ overlay.classList.remove('open'); resetSuggest(); });
 overlay.addEventListener('click', e=>{ if(e.target === overlay){ overlay.classList.remove('open'); resetSuggest(); } });
 
