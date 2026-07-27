@@ -30,7 +30,7 @@
   }
 
   .brand-bar {
-    max-width: 1180px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 32px 24px 16px;
     text-align: center;
@@ -49,7 +49,7 @@
 
   main {
     padding: 8px 24px 80px;
-    max-width: 1180px;
+    max-width: 100%;
     margin: 0 auto;
   }
 
@@ -181,7 +181,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin: -6px 0 18px;
+    margin: 0 0 18px;
   }
   .genre-pill {
     font-size: 0.78rem;
@@ -201,22 +201,12 @@
     border-color: var(--accent-blue);
   }
 
-  .count-line {
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    margin: 0 0 14px 4px;
-    font-weight: 500;
-  }
-
+  /* Desktop: flex/flow na celú šírku obrazovky */
   .list-container {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    display: flex;
+    flex-wrap: wrap;
     gap: 16px;
   }
-  @media (max-width: 1200px) { .list-container { grid-template-columns: repeat(6, 1fr); } }
-  @media (max-width: 1000px) { .list-container { grid-template-columns: repeat(5, 1fr); } }
-  @media (max-width: 800px)  { .list-container { grid-template-columns: repeat(4, 1fr); } }
-  @media (max-width: 600px)  { .list-container { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
 
   .row-card {
     display: flex;
@@ -231,6 +221,8 @@
     -webkit-user-select: none;
     user-select: none;
     touch-action: manipulation;
+    width: calc((100% - (16px * 6)) / 7);
+    min-width: 140px;
   }
   .row-card:hover {
     border-color: #d2d7de;
@@ -323,6 +315,7 @@
     background: var(--card-bg);
     border-radius: var(--radius);
     border: 1px solid var(--border-color);
+    width: 100%;
   }
 
   .overlay {
@@ -373,17 +366,11 @@
     justify-content: space-between;
     margin-bottom: 12px;
   }
-  .filter-status-row .count-line {
-    margin: 0;
-  }
   .mobile-genre-toggle {
     margin-bottom: 0 !important;
   }
   .toolbar {
     margin-bottom: 14px;
-  }
-  @media (max-width: 768px) {
-    main { padding: 4px 12px 60px; }
   }
 
   .mobile-genre-toggle {
@@ -412,6 +399,17 @@
     .mobile-genre-toggle { display: inline-flex; align-items: center; gap: 6px; }
     .genre-pills { display: none; margin-bottom: 14px; }
     .genre-pills.mobile-open { display: flex; }
+
+    /* Mobilný grid zachovaný */
+    .list-container {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .row-card {
+      width: auto;
+      min-width: 0;
+    }
   }
 
   .card-info {
@@ -469,8 +467,7 @@
   </div>
 
   <div class="filter-status-row">
-    <button type="button" class="btn mobile-genre-toggle" id="genreToggleBtn">🏷️ Žánre</button>
-    <p class="count-line" id="countLine"></p>
+    <button type="button" class="btn mobile-genre-toggle" id="genreToggleBtn">🏷️ Filtre (Žánre a Roky)</button>
   </div>
   <div class="genre-pills" id="genrePills"></div>
 
@@ -572,9 +569,8 @@ let data = [];
 let state = { search:'', type:'all', sort:'added-desc' };
 
 const rowsEl = document.getElementById('rows');
-const countLine = document.getElementById('countLine');
 const genrePillsEl = document.getElementById('genrePills');
-const activeGenres = new Set();
+const activeFilters = new Set();
 
 function splitGenres(genreStr){
   return (genreStr || '').split(',').map(g => g.trim()).filter(Boolean);
@@ -582,18 +578,27 @@ function splitGenres(genreStr){
 
 function renderGenrePills(){
   const allGenres = new Set();
-  data.forEach(d => splitGenres(d.genre).forEach(g => allGenres.add(g)));
-  const sorted = Array.from(allGenres).sort((a,b)=>a.localeCompare(b,'sk'));
-  if(!sorted.length){ genrePillsEl.innerHTML = ''; return; }
-  genrePillsEl.innerHTML = sorted.map(g =>
-    `<button type="button" class="genre-pill${activeGenres.has(g) ? ' active' : ''}" data-genre="${escapeHTML(g)}">${escapeHTML(g)}</button>`
+  const allYears = new Set();
+  data.forEach(d => {
+    splitGenres(d.genre).forEach(g => allGenres.add(g));
+    if(d.year) allYears.add(String(d.year));
+  });
+  const sortedGenres = Array.from(allGenres).sort((a,b)=>a.localeCompare(b,'sk'));
+  const sortedYears = Array.from(allYears).sort((a,b)=>b.localeCompare(a)); // Od najnovších rokov po najstaršie
+  
+  const combinedFilters = [...sortedGenres, ...sortedYears];
+  if(!combinedFilters.length){ genrePillsEl.innerHTML = ''; return; }
+  
+  genrePillsEl.innerHTML = combinedFilters.map(f =>
+    `<button type="button" class="genre-pill${activeFilters.has(f) ? ' active' : ''}" data-filter="${escapeHTML(f)}">${escapeHTML(f)}</button>`
   ).join('');
 }
+
 genrePillsEl.addEventListener('click', e=>{
   const btn = e.target.closest('.genre-pill');
   if(!btn) return;
-  const g = btn.dataset.genre;
-  if(activeGenres.has(g)) activeGenres.delete(g); else activeGenres.add(g);
+  const f = btn.dataset.filter;
+  if(activeFilters.has(f)) activeFilters.delete(f); else activeFilters.add(f);
   applyFiltersAndRender();
 });
 
@@ -629,7 +634,9 @@ function rowHTML(item){
     : `<span class="icon-chip provider-chip empty" title="Nezistené, kde sledovať">—</span>`;
 
   const metaParts = [];
-  if(item.year) metaParts.push(item.year);
+  if(item.year) metaParts.path ? null : metaParts.push(item.year); // Použijeme rok
+  else if(item.year) metaParts.push(item.year);
+  
   if(item.genre) {
     const firstGenre = item.genre.split(',')[0].trim();
     if(firstGenre) metaParts.push(firstGenre);
@@ -655,9 +662,16 @@ function applyFiltersAndRender(){
   renderGenrePills();
   let list = data.slice();
   if(state.type !== 'all') list = list.filter(d => d.type === state.type);
-  if(activeGenres.size > 0){
-    list = list.filter(d => splitGenres(d.genre).some(g => activeGenres.has(g)));
+  
+  if(activeFilters.size > 0){
+    list = list.filter(d => {
+      const itemGenres = splitGenres(d.genre);
+      const itemYear = d.year ? String(d.year) : '';
+      // Položka musí vyhovovať aspoň jednej vybranej kategórii (alebo ak sú zvolené viaceré, správa sa ako OR/AND podľa potreby, tu vyhovuje ak obsahuje aspoň jeden filter)
+      return Array.from(activeFilters).some(f => itemGenres.includes(f) || itemYear === f);
+    });
   }
+
   if(state.search.trim()){
     const q = state.search.trim().toLowerCase();
     list = list.filter(d => 
@@ -678,7 +692,6 @@ function applyFiltersAndRender(){
   rowsEl.innerHTML = list.length
     ? list.map(rowHTML).join('')
     : `<div class="empty-state">Žiadne tituly nezodpovedajú vyhľadávaniu.</div>`;
-  countLine.textContent = `Zobrazených ${list.length} z ${data.length} titulov`;
 }
 
 document.getElementById('sortSel').addEventListener('change', e=>{ state.sort = e.target.value; applyFiltersAndRender(); });
@@ -819,7 +832,6 @@ document.getElementById('settingsForm').addEventListener('submit', e=>{
 });
 refreshTmdbStatus();
 
-/* --- OPRAVENÉ: Funkcionalita pre export dát do JSON --- */
 document.getElementById('exportBtn').addEventListener('click', () => {
   const exportData = data.map(item => ({
     title: item.title,
@@ -843,12 +855,11 @@ document.getElementById('exportBtn').addEventListener('click', () => {
   URL.revokeObjectURL(url);
 });
 
-/* Mobilné prepínanie žánrov */
 const genreToggleBtn = document.getElementById('genreToggleBtn');
 if(genreToggleBtn){
   genreToggleBtn.addEventListener('click', ()=>{
     genrePillsEl.classList.toggle('mobile-open');
-    genreToggleBtn.textContent = genrePillsEl.classList.contains('mobile-open') ? '✕ Zavrieť žánre' : '🏷️ Žánre';
+    genreToggleBtn.textContent = genrePillsEl.classList.contains('mobile-open') ? '✕ Zavrieť filtre' : '🏷️ Filtre (Žánre a Roky)';
   });
 }
 
