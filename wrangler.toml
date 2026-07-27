@@ -1,0 +1,11 @@
+name = "filmopolis"
+main = "worker.js"
+compatibility_date = "2026-07-01"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "FILMOPOLIS_KV"
+id = "fbeaeec71eac422b88ce74eae6fa804c"
