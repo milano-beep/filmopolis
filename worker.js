@@ -116,6 +116,13 @@ async function handleOAuthCallback(request, env) {
     return new Response("Chýba autorizačný kód od Traktu.", { status: 400 });
   }
 
+  if (!env.TRAKT_CLIENT_ID || !env.TRAKT_CLIENT_SECRET) {
+    return new Response(
+      `DIAGNOSTIKA: TRAKT_CLIENT_ID prítomný = ${!!env.TRAKT_CLIENT_ID}, TRAKT_CLIENT_SECRET prítomný = ${!!env.TRAKT_CLIENT_SECRET}`,
+      { status: 500 }
+    );
+  }
+
   const redirectUri = `${url.origin}/oauth/callback`;
 
   const res = await fetch(`${TRAKT_API}/oauth/token`, {
@@ -135,7 +142,11 @@ async function handleOAuthCallback(request, env) {
 
   if (!res.ok) {
     const detail = await res.text();
-    return new Response("Nepodarilo sa dokončiť prepojenie s Traktom: " + detail, { status: 500 });
+    return new Response(
+      "Nepodarilo sa dokončiť prepojenie s Traktom: " + detail +
+      ` | debug: client_id_len=${(env.TRAKT_CLIENT_ID||'').length}, redirect_uri=${redirectUri}`,
+      { status: 500 }
+    );
   }
 
   const tok = await res.json();
@@ -222,6 +233,14 @@ async function handleTraktSync(env) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    if (url.pathname === "/api/debug-env") {
+      return json({
+        hasClientId: !!env.TRAKT_CLIENT_ID,
+        hasClientSecret: !!env.TRAKT_CLIENT_SECRET,
+        clientIdLength: env.TRAKT_CLIENT_ID ? env.TRAKT_CLIENT_ID.length : 0,
+      });
+    }
 
     if (url.pathname === "/api/films") {
       return handleFilmsApi(request, env);
