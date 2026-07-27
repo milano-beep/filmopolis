@@ -642,7 +642,7 @@ function rowHTML(item){
     ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}</a>`
     : `<div class="poster-frame" title="${escapeHTML(item.title)}">${posterInner}</div>`;
 
-  // Ak nie je vyplnené hodnotenie, dá sa tam otaznik '?'
+  // Hodnotenie: ak nie je vyplnené, dá sa tam otaznik '?'
   const ratingText = combined != null ? combined + '%' : '?';
   const ratingTitleText = combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie';
   const ratingChip = `<button class="icon-chip rating-chip" data-rate="${item.id}" title="${ratingTitleText}"><span class="rating-star">★</span> <span>${ratingText}</span></button>`;
@@ -651,7 +651,7 @@ function rowHTML(item){
     ? `<span class="icon-chip provider-chip" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${hqLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
     : `<span class="icon-chip provider-chip empty" title="Nezistené, kde sledovať">—</span>`;
 
-  // Textové informácie pod kartou presne ako na fotke
+  // Textové informácie hore (pod plagátom)
   const directorLabel = item.director ? `<div class="card-director">Created by ${escapeHTML(item.director)}</div>` : '';
   
   const metaParts = [];
@@ -666,17 +666,18 @@ function rowHTML(item){
   return `
   <div class="row-card" data-id="${item.id}">
     ${posterHTML}
-    <div class="icon-row">
-      ${ratingChip}
-      ${providerChip}
-    </div>
     <div class="card-info">
       <div class="card-title" title="${escapeHTML(item.title)}">${escapeHTML(item.title)}</div>
       ${directorLabel}
       ${metaLabel}
     </div>
+    <div class="icon-row">
+      ${ratingChip}
+      ${providerChip}
+    </div>
   </div>`;
 }
+
 
 
 function applyFiltersAndRender(){
