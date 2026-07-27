@@ -260,32 +260,43 @@
   }
 
   .icon-chip {
-    flex: 1;
-    height: 34px;
-    border-radius: 9px;
+    height: 32px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 0.78rem;
-    font-weight: 700;
+    font-weight: 600;
     border: 0;
     cursor: pointer;
     overflow: hidden;
     background: var(--bg-main);
     color: var(--text-primary);
-    padding: 0;
+    padding: 0 8px;
   }
 
-  .rating-chip { color: #e8362b; }
-  .rating-chip:hover { background: #fbe3e0; }
+  .rating-chip {
+    background: transparent;
+    color: var(--text-primary);
+    gap: 4px;
+    padding: 0 4px;
+  }
+  .rating-chip:hover { background: #f0f2f5; }
+  .rating-star {
+    color: #8a5cf5;
+    font-size: 0.9rem;
+    line-height: 1;
+  }
 
   .provider-chip {
+    width: 32px;
+    padding: 0;
     background: #ffffff;
     border: 1px solid var(--border-color);
     cursor: default;
   }
   .provider-chip img { width: 100%; height: 100%; object-fit: cover; }
-  .provider-chip.empty { color: var(--text-secondary); font-weight: 400; }
+  .provider-chip.empty { color: var(--text-secondary); font-weight: 400; width: auto; padding: 0 8px; font-size: 0.7rem; }
 
   .del {
     background: none; border: none;
@@ -596,7 +607,7 @@ function rowHTML(item){
     ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}</a>`
     : `<div class="poster-frame" title="${escapeHTML(item.title)}">${posterInner}</div>`;
 
-  const ratingChip = `<button class="icon-chip rating-chip" data-rate="${item.id}" title="${combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie'}">${combined != null ? combined + '%' : '☆'}</button>`;
+  const ratingChip = `<button class="icon-chip rating-chip" data-rate="${item.id}" title="${combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie'}"><span class="rating-star">★</span> <span>${combined != null ? combined + '%' : '☆'}</span></button>`;
 
   const providerChip = hqLogo
     ? `<span class="icon-chip provider-chip" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${hqLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
