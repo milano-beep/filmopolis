@@ -191,14 +191,13 @@
   /* Zoznam položiek s medzerami medzi kartami */
   .list-container {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 16px;
   }
-  @media (max-width: 1500px) { .list-container { grid-template-columns: repeat(6, 1fr); } }
-  @media (max-width: 1180px) { .list-container { grid-template-columns: repeat(5, 1fr); } }
-  @media (max-width: 900px)  { .list-container { grid-template-columns: repeat(4, 1fr); } }
-  @media (max-width: 680px)  { .list-container { grid-template-columns: repeat(3, 1fr); } }
-  @media (max-width: 480px)  { .list-container { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+  @media (max-width: 1200px) { .list-container { grid-template-columns: repeat(6, 1fr); } }
+  @media (max-width: 1000px) { .list-container { grid-template-columns: repeat(5, 1fr); } }
+  @media (max-width: 800px)  { .list-container { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 600px)  { .list-container { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
 
   .row-card {
     display: flex;
@@ -583,9 +582,15 @@ function getCombinedRating(item){
 
 function rowHTML(item){
   const combined = getCombinedRating(item);
-  const posterInner = item.poster
-    ? `<img src="${item.poster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'">`
+  
+  // Zvýšenie kvality obrazu prepísaním URL cesty
+  const hqPoster = item.poster ? item.poster.replace(/\/w(92|154|185)\//, '/w500/') : '';
+  const hqLogo = item.providerLogo ? item.providerLogo.replace(/\/w(45|92)\//, '/w154/') : '';
+
+  const posterInner = hqPoster
+    ? `<img src="${hqPoster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'">`
     : `<div class="poster-placeholder">${escapeHTML(item.title)}</div>`;
+    
   const tmdbUrl = item.tmdbId ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
   const posterHTML = tmdbUrl
     ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}</a>`
@@ -593,8 +598,8 @@ function rowHTML(item){
 
   const ratingChip = `<button class="icon-chip rating-chip" data-rate="${item.id}" title="${combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie'}">${combined != null ? combined + '%' : '☆'}</button>`;
 
-  const providerChip = item.providerLogo
-    ? `<span class="icon-chip provider-chip" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${item.providerLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
+  const providerChip = hqLogo
+    ? `<span class="icon-chip provider-chip" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${hqLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
     : `<span class="icon-chip provider-chip empty" title="Nezistené, kde sledovať">—</span>`;
 
   return `
@@ -917,7 +922,7 @@ async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
       year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
       rating: null,
       public: d.vote_average ? Math.round(d.vote_average * 10) : null,
-      poster: d.poster_path ? `https://image.tmdb.org/t/p/w92${d.poster_path}` : '',
+      poster: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : '',
       director: director,
       actors: actors,
       genre: genre,
@@ -1042,7 +1047,7 @@ function detailsFromTmdb(d, mediaType){
     tmdbId: d.id,
     year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
     public: d.vote_average ? Math.round(d.vote_average * 10) : null,
-    poster: d.poster_path ? `https://image.tmdb.org/t/p/w185${d.poster_path}` : '',
+    poster: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : '',
     director,
     actors: d.credits?.cast?.slice(0,3).map(a=>a.name).join(', ') || '',
     genre: (d.genres || []).map(g => g.name).join(', '),
