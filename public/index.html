@@ -384,6 +384,19 @@
   .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
 
 
+
+  .mobile-genre-toggle {
+    display: none;
+    margin-bottom: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: var(--text-primary);
+  }
+
   @media (max-width: 768px) {
     .brand-bar { padding: 24px 16px 12px; text-align: center; }
     main { padding: 8px 12px 60px; }
@@ -395,7 +408,11 @@
     .type-toggle, #sortSel, #exportBtn, #settingsBtn, .tmdb-status {
       display: none !important;
     }
+    .mobile-genre-toggle { display: inline-flex; align-items: center; gap: 6px; }
+    .genre-pills { display: none; margin-bottom: 14px; }
+    .genre-pills.mobile-open { display: flex; }
   }
+
 
 
   /* Nové štýly pre textové detaily pod kartou */
@@ -499,10 +516,11 @@
       <option value="az">Názov A–Z</option>
     </select>
     <button class="btn" id="exportBtn" title="Exportovať dáta pre Gemini AI">📥 Export dát</button>
-    <button class="btn ghost" id="settingsBtn" title="Nastavenia TMDb">⚙ Nastavenia</button>
+    <button class="btn ghost" id="settingsBtn" title="Nastavenia">⚙</button>
     <div class="tmdb-status" id="tmdbStatus"><span class="dot"></span><span id="tmdbStatusText">TMDb nepripojené</span></div>
   </div>
 
+  <button type="button" class="btn mobile-genre-toggle" id="genreToggleBtn">🏷️ Žánre</button>
   <div class="genre-pills" id="genrePills"></div>
 
   <p class="count-line" id="countLine"></p>
@@ -887,7 +905,7 @@ const settingsOverlay = document.getElementById('settingsOverlay');
 function refreshTmdbStatus(){
   const on = !!getApiKey();
   document.getElementById('tmdbStatus').classList.toggle('on', on);
-  document.getElementById('tmdbStatusText').textContent = on ? 'TMDb aktívne' : 'TMDb nepripojené';
+  document.getElementById('tmdbStatusText').textContent = on ? 'Aktívne' : 'Nepripojené';
 }
 document.getElementById('settingsBtn').addEventListener('click', ()=>{
   document.getElementById('f-apikey').value = getApiKey();
@@ -900,8 +918,28 @@ document.getElementById('settingsForm').addEventListener('submit', e=>{
   setApiKey(document.getElementById('f-apikey').value.trim());
   settingsOverlay.classList.remove('open');
   refreshTmdbStatus();
+
+/* Mobilné prepínanie žánrov */
+const genreToggleBtn = document.getElementById('genreToggleBtn');
+if(genreToggleBtn){
+  genreToggleBtn.addEventListener('click', ()=>{
+    genrePillsEl.classList.toggle('mobile-open');
+    genreToggleBtn.textContent = genrePillsEl.classList.contains('mobile-open') ? '✕ Zavrieť žánre' : '🏷️ Žánre';
+  });
+}
+
 });
 refreshTmdbStatus();
+
+/* Mobilné prepínanie žánrov */
+const genreToggleBtn = document.getElementById('genreToggleBtn');
+if(genreToggleBtn){
+  genreToggleBtn.addEventListener('click', ()=>{
+    genrePillsEl.classList.toggle('mobile-open');
+    genreToggleBtn.textContent = genrePillsEl.classList.contains('mobile-open') ? '✕ Zavrieť žánre' : '🏷️ Žánre';
+  });
+}
+
 
 /* --- Trakt.tv prepojenie --- */
 const TRAKT_CLIENT_ID = 'czkOk8dzfiN_ePt4ZW-haAq_GlyajWEqbBJqwl9XVNs';
