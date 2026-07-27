@@ -479,6 +479,16 @@
         <button type="submit" class="btn btn-large-add">Uložiť</button>
       </div>
     </form>
+
+    <hr style="margin:22px 0;border:none;border-top:1px solid var(--border-color);">
+
+    <h2 style="font-size:1.3rem;">Trakt.tv</h2>
+    <p class="sub" id="traktStatusText">Zisťujem stav pripojenia…</p>
+    <div class="modal-actions" style="justify-content:flex-start;gap:10px;">
+      <a class="btn btn-large-add" id="traktConnectBtn" href="#" style="text-decoration:none;display:inline-block;">Pripojiť Trakt účet</a>
+      <button type="button" class="btn" id="traktSyncBtn" style="display:none;">Synchronizovať teraz</button>
+    </div>
+    <p class="sub" id="traktSyncResult" style="margin-top:10px;"></p>
   </div>
 </div>
 
@@ -763,6 +773,7 @@ function refreshTmdbStatus(){
 document.getElementById('settingsBtn').addEventListener('click', ()=>{
   document.getElementById('f-apikey').value = getApiKey();
   settingsOverlay.classList.add('open');
+  refreshTraktStatus();
 });
 document.getElementById('settingsCancel').addEventListener('click', ()=> settingsOverlay.classList.remove('open'));
 document.getElementById('settingsForm').addEventListener('submit', e=>{
@@ -772,6 +783,55 @@ document.getElementById('settingsForm').addEventListener('submit', e=>{
   refreshTmdbStatus();
 });
 refreshTmdbStatus();
+
+/* --- Trakt.tv prepojenie --- */
+const TRAKT_CLIENT_ID = 'czkOk8dzfiN_ePt4ZW-haAq_GlyajWEqbBJqwl9XVNs';
+const traktConnectBtn = document.getElementById('traktConnectBtn');
+const traktSyncBtn = document.getElementById('traktSyncBtn');
+const traktStatusText = document.getElementById('traktStatusText');
+const traktSyncResult = document.getElementById('traktSyncResult');
+
+traktConnectBtn.addEventListener('click', e=>{
+  e.preventDefault();
+  const redirectUri = location.origin + '/oauth/callback';
+  const url = `https://trakt.tv/oauth/authorize?response_type=code&client_id=${TRAKT_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  window.location.href = url;
+});
+
+async function refreshTraktStatus(){
+  try{
+    const res = await fetch('/api/trakt-status');
+    const s = await res.json();
+    if(s.connected){
+      traktStatusText.textContent = 'Trakt účet je pripojený.';
+      traktConnectBtn.textContent = 'Znova prepojiť Trakt účet';
+      traktSyncBtn.style.display = 'inline-block';
+    } else {
+      traktStatusText.textContent = 'Trakt účet zatiaľ nie je pripojený.';
+      traktConnectBtn.textContent = 'Pripojiť Trakt účet';
+      traktSyncBtn.style.display = 'none';
+    }
+  }catch(err){
+    traktStatusText.textContent = 'Nepodarilo sa zistiť stav pripojenia.';
+  }
+}
+
+traktSyncBtn.addEventListener('click', async ()=>{
+  traktSyncBtn.disabled = true;
+  traktSyncResult.textContent = 'Synchronizujem…';
+  try{
+    const res = await fetch('/api/trakt-sync', { method:'POST' });
+    const result = await res.json();
+    if(!res.ok) throw new Error(result.error || 'Chyba synchronizácie');
+    traktSyncResult.textContent = `Hotovo — pridaných ${result.added}, aktualizovaných ${result.updated} titulov.`;
+    data = await apiGetAll();
+    applyFiltersAndRender();
+  }catch(err){
+    traktSyncResult.textContent = 'Synchronizácia zlyhala: ' + err.message;
+  }finally{
+    traktSyncBtn.disabled = false;
+  }
+});
 
 /* TMDb Našepkávač v modálnom okne */
 const titleInput = document.getElementById('f-title');

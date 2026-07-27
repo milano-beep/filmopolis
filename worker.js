@@ -66,12 +66,171 @@ async function handleFilmsApi(request, env) {
   return json({ error: "Method not allowed" }, 405);
 }
 
+const TRAKT_API = "https://api.trakt.tv";
+
+async function getTraktTokens(kv) {
+  return await kv.get("trakt_auth", "json");
+}
+
+async function saveTraktTokens(kv, tokens) {
+  await kv.put("trakt_auth", JSON.stringify(tokens));
+}
+
+async function ensureFreshToken(env) {
+  let tokens = await getTraktTokens(env.FILMOPOLIS_KV);
+  if (!tokens) return null;
+
+  const isExpired = Date.now() >= tokens.expires_at - 60000;
+  if (!isExpired) return tokens;
+
+  const res = await fetch(`${TRAKT_API}/oauth/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      refresh_token: tokens.refresh_token,
+      client_id: env.TRAKT_CLIENT_ID,
+      client_secret: env.TRAKT_CLIENT_SECRET,
+      redirect_uri: tokens.redirect_uri,
+      grant_type: "refresh_token",
+    }),
+  });
+  if (!res.ok) return null;
+  const fresh = await res.json();
+  tokens = {
+    access_token: fresh.access_token,
+    refresh_token: fresh.refresh_token,
+    expires_at: Date.now() + fresh.expires_in * 1000,
+    redirect_uri: tokens.redirect_uri,
+  };
+  await saveTraktTokens(env.FILMOPOLIS_KV, tokens);
+  return tokens;
+}
+
+async function handleOAuthCallback(request, env) {
+  const url = new URL(request.url);
+  const code = url.searchParams.get("code");
+  if (!code) {
+    return new Response("Chýba autorizačný kód od Traktu.", { status: 400 });
+  }
+
+  const redirectUri = `${url.origin}/oauth/callback`;
+
+  const res = await fetch(`${TRAKT_API}/oauth/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      code,
+      client_id: env.TRAKT_CLIENT_ID,
+      client_secret: env.TRAKT_CLIENT_SECRET,
+      redirect_uri: redirectUri,
+      grant_type: "authorization_code",
+    }),
+  });
+
+  if (!res.ok) {
+    const detail = await res.text();
+    return new Response("Nepodarilo sa dokončiť prepojenie s Traktom: " + detail, { status: 500 });
+  }
+
+  const tok = await res.json();
+  await saveTraktTokens(env.FILMOPOLIS_KV, {
+    access_token: tok.access_token,
+    refresh_token: tok.refresh_token,
+    expires_at: Date.now() + tok.expires_in * 1000,
+    redirect_uri: redirectUri,
+  });
+
+  return Response.redirect(url.origin + "/", 302);
+}
+
+async function traktFetch(path, env, tokens) {
+  const res = await fetch(`${TRAKT_API}${path}`, {
+    headers: {
+      "Content-Type": "application/json",
+      "trakt-api-version": "2",
+      "trakt-api-key": env.TRAKT_CLIENT_ID,
+      Authorization: `Bearer ${tokens.access_token}`,
+    },
+  });
+  if (!res.ok) throw new Error(`Trakt ${path} -> ${res.status}`);
+  return res.json();
+}
+
+async function handleTraktSync(env) {
+  const tokens = await ensureFreshToken(env);
+  if (!tokens) {
+    return json({ error: "Trakt účet nie je pripojený." }, 400);
+  }
+
+  const [ratedMovies, ratedShows] = await Promise.all([
+    traktFetch("/sync/ratings/movies", env, tokens),
+    traktFetch("/sync/ratings/shows", env, tokens),
+  ]);
+
+  const traktItems = [
+    ...ratedMovies.map((r) => ({ ...r.movie, rating: r.rating, kind: "film" })),
+    ...ratedShows.map((r) => ({ ...r.show, rating: r.rating, kind: "seriál" })),
+  ];
+
+  const films = await loadFilms(env.FILMOPOLIS_KV);
+  let added = 0;
+  let updated = 0;
+
+  for (const t of traktItems) {
+    const tmdbId = t.ids && t.ids.tmdb;
+    const convertedRating = Math.round(t.rating * 10);
+    const existing = tmdbId ? films.find((f) => f.tmdbId === tmdbId) : null;
+
+    if (existing) {
+      existing.rating = convertedRating;
+      updated++;
+    } else {
+      const nextId = films.length ? Math.max(...films.map((f) => f.id)) + 1 : 1;
+      films.push({
+        id: nextId,
+        title: t.title,
+        original: "",
+        type: t.kind,
+        year: t.year ? String(t.year) : null,
+        rating: convertedRating,
+        milan: null,
+        basa: null,
+        public: null,
+        genre: "",
+        director: "",
+        actors: "",
+        poster: "",
+        providerName: "",
+        providerLogo: "",
+        tmdbId: tmdbId || null,
+      });
+      added++;
+    }
+  }
+
+  await env.FILMOPOLIS_KV.put("films", JSON.stringify(films));
+  return json({ ok: true, added, updated });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/films") {
       return handleFilmsApi(request, env);
+    }
+
+    if (url.pathname === "/oauth/callback") {
+      return handleOAuthCallback(request, env);
+    }
+
+    if (url.pathname === "/api/trakt-status") {
+      const tokens = await getTraktTokens(env.FILMOPOLIS_KV);
+      return json({ connected: !!tokens });
+    }
+
+    if (url.pathname === "/api/trakt-sync" && request.method === "POST") {
+      return handleTraktSync(env);
     }
 
     // Everything else -> serve static assets from /public
