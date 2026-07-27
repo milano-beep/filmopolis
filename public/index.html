@@ -201,6 +201,24 @@
     border-color: var(--accent-blue);
   }
 
+  .suggest-box {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: #fff; border: 1px solid var(--border-color);
+    border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    z-index: 10; max-height: 250px; overflow: auto; display: none;
+    margin-top: 4px;
+  }
+  .suggest-box.open { display: block; }
+  .suggest-item {
+    display: flex; gap: 10px; padding: 8px 12px; cursor: pointer; align-items: center;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .suggest-item:last-child { border-bottom: none; }
+  .suggest-item:hover { background: var(--bg-main); }
+  .suggest-item img { width: 32px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+  .suggest-item .si-title { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); }
+  .suggest-item .si-meta { font-size: 0.72rem; color: var(--text-secondary); }
+
   /* Desktop: flex/flow na celú šírku obrazovky */
   .list-container {
     display: flex;
@@ -366,9 +384,6 @@
     justify-content: space-between;
     margin-bottom: 12px;
   }
-  .mobile-genre-toggle {
-    margin-bottom: 0 !important;
-  }
   .toolbar {
     margin-bottom: 14px;
   }
@@ -400,7 +415,6 @@
     .genre-pills { display: none; margin-bottom: 14px; }
     .genre-pills.mobile-open { display: flex; }
 
-    /* Mobilný grid zachovaný */
     .list-container {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -446,7 +460,8 @@
 <main>
   <div class="toolbar">
     <div class="field-search">
-      <input type="text" id="search" placeholder="Hľadať v denníku…" autocomplete="off">
+      <input type="text" id="search" placeholder="Pridať titul z TMDb…" autocomplete="off">
+      <div class="suggest-box" id="mainSuggestBox"></div>
     </div>
     <div class="type-toggle" id="typeToggle">
       <button data-type="all" class="active">Všetko</button>
@@ -546,6 +561,15 @@ async function apiGetAll(){
   const list = await res.json();
   return list.map(applyLegacyRating);
 }
+async function apiAdd(entry){
+  const res = await fetch(API_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(entry)
+  });
+  if(!res.ok) throw new Error('API ' + res.status);
+  return applyLegacyRating(await res.json());
+}
 async function apiPatch(patch){
   const res = await fetch(API_URL, {
     method:'PATCH',
@@ -566,7 +590,7 @@ async function apiDelete(id){
 }
 
 let data = [];
-let state = { search:'', type:'all', sort:'added-desc' };
+let state = { type:'all', sort:'added-desc' };
 
 const rowsEl = document.getElementById('rows');
 const genrePillsEl = document.getElementById('genrePills');
@@ -584,7 +608,7 @@ function renderGenrePills(){
     if(d.year) allYears.add(String(d.year));
   });
   const sortedGenres = Array.from(allGenres).sort((a,b)=>a.localeCompare(b,'sk'));
-  const sortedYears = Array.from(allYears).sort((a,b)=>b.localeCompare(a)); // Od najnovších rokov po najstaršie
+  const sortedYears = Array.from(allYears).sort((a,b)=>b.localeCompare(a));
   
   const combinedFilters = [...sortedGenres, ...sortedYears];
   if(!combinedFilters.length){ genrePillsEl.innerHTML = ''; return; }
@@ -634,9 +658,7 @@ function rowHTML(item){
     : `<span class="icon-chip provider-chip empty" title="Nezistené, kde sledovať">—</span>`;
 
   const metaParts = [];
-  if(item.year) metaParts.path ? null : metaParts.push(item.year); // Použijeme rok
-  else if(item.year) metaParts.push(item.year);
-  
+  if(item.year) metaParts.push(item.year);
   if(item.genre) {
     const firstGenre = item.genre.split(',')[0].trim();
     if(firstGenre) metaParts.push(firstGenre);
@@ -667,20 +689,10 @@ function applyFiltersAndRender(){
     list = list.filter(d => {
       const itemGenres = splitGenres(d.genre);
       const itemYear = d.year ? String(d.year) : '';
-      // Položka musí vyhovovať aspoň jednej vybranej kategórii (alebo ak sú zvolené viaceré, správa sa ako OR/AND podľa potreby, tu vyhovuje ak obsahuje aspoň jeden filter)
       return Array.from(activeFilters).some(f => itemGenres.includes(f) || itemYear === f);
     });
   }
 
-  if(state.search.trim()){
-    const q = state.search.trim().toLowerCase();
-    list = list.filter(d => 
-      d.title.toLowerCase().includes(q) || 
-      (d.original||'').toLowerCase().includes(q) ||
-      (d.director||'').toLowerCase().includes(q) ||
-      (d.actors||'').toLowerCase().includes(q)
-    );
-  }
   switch(state.sort){
     case 'added-desc': list.sort((a,b)=>b.id-a.id); break;
     case 'rating-desc': list.sort((a,b)=>(getCombinedRating(b)??-1)-(getCombinedRating(a)??-1)); break;
@@ -863,10 +875,140 @@ if(genreToggleBtn){
   });
 }
 
+/* --- TMDb Našepkávač v hlavnom vyhľadávacom poli pre pridávanie titulov --- */
 const mainSearchInput = document.getElementById('search');
+const mainSuggestBox = document.getElementById('mainSuggestBox');
+let mainDebounceTimer = null;
+
+function resetMainSuggest(){ 
+  mainSuggestBox.classList.remove('open'); 
+  mainSuggestBox.innerHTML = ''; 
+}
+
+async function runTmdbSearch(query, targetBox){
+  const key = getApiKey();
+  targetBox.innerHTML = `<div style="padding:8px 12px;font-size:0.8rem;color:var(--text-secondary);">Vyhľadávam...</div>`;
+  targetBox.classList.add('open');
+  try {
+    const isBearer = key.startsWith('eyJ');
+    const url = isBearer
+      ? `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(query)}&language=sk-SK`
+      : `https://api.themoviedb.org/3/search/multi?api_key=${encodeURIComponent(key)}&query=${encodeURIComponent(query)}&language=sk-SK`;
+    const res = await fetch(url, isBearer ? { headers:{ Authorization:`Bearer ${key}` } } : {});
+    const json = await res.json();
+    const results = (json.results||[]).filter(r => r.media_type==='movie' || r.media_type==='tv').slice(0,6);
+    if(!results.length){
+      targetBox.innerHTML = `<div style="padding:8px 12px;font-size:0.8rem;color:var(--text-secondary);">Nenašli sa žiadne výsledky</div>`;
+      return;
+    }
+    targetBox.innerHTML = results.map(r => {
+      const name = r.title || r.name || '';
+      const date = r.release_date || r.first_air_date || '';
+      const year = date ? date.slice(0,4) : '';
+      const type = r.media_type === 'tv' ? 'seriál' : 'film';
+      const poster = r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : '';
+      const rating = r.vote_average ? Math.round(r.vote_average*10) : '';
+      return `<div class="suggest-item" data-id="${r.id}" data-type="${r.media_type}">
+        ${poster ? `<img src="${poster}">` : '<div style="width:32px;height:48px;background:#eee;border-radius:4px;"></div>'}
+        <div>
+          <div class="si-title">${escapeHTML(name)}</div>
+          <div class="si-meta">Pridať z TMDb · ${type === 'seriál' ? 'Seriál' : 'Film'}${year ? ' · '+year : ''}${rating ? ' · '+rating+'%' : ''}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    targetBox.innerHTML = `<div style="padding:8px 12px;font-size:0.8rem;color:red;">Chyba pripojenia</div>`;
+  }
+}
+
+function extractProvider(d){
+  const wp = d['watch/providers']?.results;
+  if(!wp) return { providerName: '', providerLogo: '' };
+  const region = wp.SK || wp.CZ || wp.AT || wp.US || Object.values(wp)[0];
+  if(!region) return { providerName: '', providerLogo: '' };
+  const list = region.flatrate || region.free || region.ads || region.rent || region.buy;
+  if(!list || !list.length) return { providerName: '', providerLogo: '' };
+  const p = list[0];
+  return {
+    providerName: p.provider_name || '',
+    providerLogo: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : ''
+  };
+}
+
+async function handleSelectTmdbItem(tmdbId, mediaType){
+  const key = getApiKey();
+  const isBearer = key.startsWith('eyJ');
+  try {
+    const detailUrl = isBearer
+      ? `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?append_to_response=credits,watch/providers&language=sk-SK`
+      : `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${encodeURIComponent(key)}&append_to_response=credits,watch/providers&language=sk-SK`;
+    const res = await fetch(detailUrl, isBearer ? { headers:{ Authorization:`Bearer ${key}` } } : {});
+    const d = await res.json();
+
+    let director = '';
+    if(d.credits && d.credits.crew){
+      const dirObj = d.credits.crew.find(c => c.job === 'Director');
+      if(dirObj) director = dirObj.name;
+    }
+    if(!director && d.created_by && d.created_by.length){
+      director = d.created_by.map(c=>c.name).join(', ');
+    }
+
+    let actors = '';
+    if(d.credits && d.credits.cast){
+      actors = d.credits.cast.slice(0, 3).map(a=>a.name).join(', ');
+    }
+
+    const genre = (d.genres || []).map(g => g.name).join(', ');
+    const provider = extractProvider(d);
+
+    const entry = {
+      title: d.title || d.name,
+      original: d.original_title || d.original_name || '',
+      type: mediaType === 'tv' ? 'seriál' : 'film',
+      year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
+      rating: null,
+      public: d.vote_average ? Math.round(d.vote_average * 10) : null,
+      poster: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : '',
+      director: director,
+      actors: actors,
+      genre: genre,
+      providerName: provider.providerName,
+      providerLogo: provider.providerLogo,
+      tmdbId: Number(tmdbId)
+    };
+    const saved = await apiAdd(entry);
+    data.push(saved);
+    applyFiltersAndRender();
+  } catch(err) {
+    console.error(err);
+  }
+}
+
 mainSearchInput.addEventListener('input', e => {
-  state.search = e.target.value;
-  applyFiltersAndRender();
+  const q = e.target.value;
+  clearTimeout(mainDebounceTimer);
+  if (!getApiKey() || q.trim().length < 2) { 
+    resetMainSuggest(); 
+    return; 
+  }
+  mainDebounceTimer = setTimeout(() => {
+    runTmdbSearch(q.trim(), mainSuggestBox);
+  }, 300);
+});
+
+mainSuggestBox.addEventListener('click', async e => {
+  const item = e.target.closest('.suggest-item');
+  if (!item) return;
+  await handleSelectTmdbItem(item.dataset.id, item.dataset.type);
+  mainSearchInput.value = '';
+  resetMainSuggest();
+});
+
+document.addEventListener('click', e => {
+  if (!mainSearchInput.contains(e.target) && !mainSuggestBox.contains(e.target)) {
+    resetMainSuggest();
+  }
 });
 
 (async function init(){
