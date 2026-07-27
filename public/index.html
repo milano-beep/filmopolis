@@ -389,10 +389,10 @@
 
   /* Nové štýly pre textové detaily pod kartou */
   .card-info {
-    padding: 6px 10px 6px 10px;
+    padding: 4px 10px 0px 10px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
   }
   .card-title {
     font-size: 0.88rem;
@@ -401,19 +401,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-top: 4px; /* malé odsadenie zvrchu názvu */
-  }
-  .card-director {
-    font-size: 0.72rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .card-director a {
-    color: inherit;
-    text-decoration: underline;
-    text-decoration-color: #c7b9f5;
+    margin-top: 4px;
   }
   .card-meta {
     font-size: 0.7rem;
@@ -421,7 +409,7 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-bottom: 2px; /* ubrané pod rokom a žánrom */
+    margin-bottom: 0px;
   }
 
   .icon-row {
@@ -429,11 +417,11 @@
     align-items: center;
     justify-content: space-between;
     gap: 6px;
-    padding: 4px 8px 8px 8px; /* upravený spodný padding */
+    padding: 2px 8px 6px 8px; /* zmenšené odsadenie medzi rokom/žánrom a hodnotením */
   }
 
   .icon-chip {
-    height: 28px;
+    height: 26px;
     border-radius: 6px;
     display: flex;
     align-items: center;
@@ -462,8 +450,8 @@
   }
 
   .provider-chip {
-    width: 24px; /* zmenšené logo o cca 30% z pôvodných 32px */
-    height: 22px; /* zmenšená výška */
+    width: 24px;
+    height: 22px;
     padding: 0;
     background: #ffffff;
     border: 1px solid var(--border-color);
@@ -692,7 +680,6 @@ function rowHTML(item){
     ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}</a>`
     : `<div class="poster-frame" title="${escapeHTML(item.title)}">${posterInner}</div>`;
 
-  // Hodnotenie: ak nie je vyplnené, dá sa tam otaznik '?'
   const ratingText = combined != null ? combined + '%' : '?';
   const ratingTitleText = combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie';
   const ratingChip = `<button class="icon-chip rating-chip" data-rate="${item.id}" title="${ratingTitleText}"><span class="rating-star">★</span> <span>${ratingText}</span></button>`;
@@ -701,9 +688,7 @@ function rowHTML(item){
     ? `<span class="icon-chip provider-chip" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${hqLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
     : `<span class="icon-chip provider-chip empty" title="Nezistené, kde sledovať">—</span>`;
 
-  // Textové informácie hore (pod plagátom)
-  const directorLabel = item.director ? `<div class="card-director">Created by ${escapeHTML(item.director)}</div>` : '';
-  
+  // Bez režiséra / created by
   const metaParts = [];
   if(item.year) metaParts.push(item.year);
   if(item.genre) {
@@ -718,7 +703,6 @@ function rowHTML(item){
     ${posterHTML}
     <div class="card-info">
       <div class="card-title" title="${escapeHTML(item.title)}">${escapeHTML(item.title)}</div>
-      ${directorLabel}
       ${metaLabel}
     </div>
     <div class="icon-row">
@@ -727,6 +711,7 @@ function rowHTML(item){
     </div>
   </div>`;
 }
+
 
 
 
