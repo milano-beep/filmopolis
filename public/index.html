@@ -29,12 +29,11 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Malá značka bez samostatnej hlavičky */
   .brand-bar {
     max-width: 1180px;
     margin: 0 auto;
     padding: 32px 24px 16px;
-    text-align: center; /* vycentrované všade na stred */
+    text-align: center;
   }
   .brand-bar h1 {
     font-family: 'Outfit', sans-serif;
@@ -102,7 +101,6 @@
   }
   select:hover, .btn:hover { background: #e8e8ed; }
 
-  /* Väčšie zvýraznené tlačidlo pre pridanie */
   .btn.btn-large-add {
     background: var(--accent-blue);
     color: #ffffff;
@@ -150,7 +148,6 @@
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   }
 
-  
   .icon-only-btn {
     display: inline-flex;
     align-items: center;
@@ -167,26 +164,6 @@
   }
   .icon-only-btn:hover {
     background: #e8e8ed;
-  }
-  .tmdb-status {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    background: var(--bg-main);
-    border-radius: 10px;
-    border: 1px solid transparent;
-  }
-  .tmdb-status .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--text-secondary);
-  }
-  .tmdb-status.on .dot {
-    background: #34c759;
-    box-shadow: 0 0 8px rgba(52, 199, 89, 0.5);
   }
 
   .tmdb-status {
@@ -231,7 +208,6 @@
     font-weight: 500;
   }
 
-  /* Zoznam položiek s medzerami medzi kartami */
   .list-container {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -262,7 +238,6 @@
     transform: translateY(-2px);
   }
 
-  /* Náhľad na prvej pozícii */
   .poster-frame {
     width: 100%;
     aspect-ratio: 2 / 3;
@@ -293,218 +268,12 @@
     padding: 10px;
   }
 
-  /* Riadok ikoniek pod plagátom */
   .icon-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 6px;
-    padding: 8px;
-  }
-
-  .icon-chip {
-    height: 32px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.78rem;
-    font-weight: 600;
-    border: 0;
-    cursor: pointer;
-    overflow: hidden;
-    background: var(--bg-main);
-    color: var(--text-primary);
-    padding: 0 8px;
-  }
-
-  .rating-chip {
-    background: transparent;
-    color: var(--text-primary);
-    gap: 4px;
-    padding: 0 4px;
-  }
-  .rating-chip:hover { background: #f0f2f5; }
-  .rating-star {
-    color: #8a5cf5;
-    font-size: 0.9rem;
-    line-height: 1;
-  }
-
-  .provider-chip {
-    width: 32px;
-    padding: 0;
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    cursor: default;
-  }
-  .provider-chip img { width: 100%; height: 100%; object-fit: cover; }
-  .provider-chip.empty { color: var(--text-secondary); font-weight: 400; width: auto; padding: 0 8px; font-size: 0.7rem; }
-
-  .del {
-    background: none; border: none;
-    color: var(--text-secondary);
-    font-size: 1.1rem;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: all 0.2s;
-  }
-  .del:hover { background: #ffe5e5; color: #ff3b30; }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-secondary);
-    background: var(--card-bg);
-    border-radius: var(--radius);
-    border: 1px solid var(--border-color);
-  }
-
-  /* Modal */
-  .overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.3);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center; justify-content: center;
-    z-index: 50;
-    padding: 20px;
-  }
-  .overlay.open { display: flex; }
-  .modal {
-    background: var(--card-bg);
-    color: var(--text-primary);
-    width: 100%;
-    max-width: 500px;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-  }
-  .modal h2 { margin: 0 0 6px; font-size: 1.3rem; font-weight: 600; }
-  .modal .sub { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; }
-
-  .field { margin-bottom: 14px; position: relative; }
-  .field label {
-    display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;
-  }
-  .field input {
-    width: 100%; padding: 10px 12px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px; font-size: 0.95rem;
-    outline: none; background: var(--bg-main);
-  }
-  .field input:focus { border-color: var(--accent-blue); background: #fff; }
-  .field .help {
-    display: block;
-    margin-top: 6px;
-    color: var(--text-secondary);
-    font-size: 0.72rem;
-  }
-
-  .suggest-box {
-    position: absolute; top: 100%; left: 0; right: 0;
-    background: #fff; border: 1px solid var(--border-color);
-    border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    z-index: 10; max-height: 250px; overflow: auto; display: none;
-    margin-top: 4px;
-  }
-  .suggest-box.open { display: block; }
-  .suggest-item {
-    display: flex; gap: 10px; padding: 8px 12px; cursor: pointer; align-items: center;
-    border-bottom: 1px solid var(--border-color);
-  }
-  .suggest-item:last-child { border-bottom: none; }
-  .suggest-item:hover { background: var(--bg-main); }
-  .suggest-item img { width: 32px; height: 48px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-  .suggest-item .si-title { font-size: 0.88rem; font-weight: 600; }
-  .suggest-item .si-meta { font-size: 0.72rem; color: var(--text-secondary); }
-
-  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
-
-
-
-  
-  .filter-status-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-  }
-  .filter-status-row .count-line {
-    margin: 0;
-  }
-  .mobile-genre-toggle {
-    margin-bottom: 0 !important;
-  }
-  .toolbar {
-    margin-bottom: 14px; /* zmenšená medzera pod toolbarom */
-  }
-  @media (max-width: 768px) {
-    main { padding: 4px 12px 60px; }
-  }
-
-  .mobile-genre-toggle {
-    display: none;
-    margin-bottom: 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 8px 14px;
-    color: var(--text-primary);
-  }
-
-  @media (max-width: 768px) {
-    .brand-bar { padding: 24px 16px 12px; text-align: center; }
-    main { padding: 8px 12px 60px; }
-    .toolbar { 
-      padding: 8px;
-      gap: 8px;
-    }
-    .toolbar .field-search { flex-basis: 100%; width: 100%; }
-    .type-toggle, #sortSel, #exportBtn, #settingsBtn, .tmdb-status {
-      display: none !important;
-    }
-    .mobile-genre-toggle { display: inline-flex; align-items: center; gap: 6px; }
-    .genre-pills { display: none; margin-bottom: 14px; }
-    .genre-pills.mobile-open { display: flex; }
-  }
-
-
-
-  /* Nové štýly pre textové detaily pod kartou */
-  .card-info {
-    padding: 4px 10px 0px 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-  }
-  .card-title {
-    font-size: 0.88rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 4px;
-  }
-  .card-meta {
-    font-size: 0.7rem;
-    color: var(--text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-bottom: 0px;
-  }
-
-  .icon-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 6px;
-    padding: 2px 8px 6px 8px; /* zmenšené odsadenie medzi rokom/žánrom a hodnotením */
+    padding: 2px 8px 6px 8px;
   }
 
   .icon-chip {
@@ -547,6 +316,127 @@
   .provider-chip img { width: 100%; height: 100%; object-fit: cover; }
   .provider-chip.empty { color: var(--text-secondary); font-weight: 400; width: auto; padding: 0 6px; font-size: 0.65rem; height: 22px; }
 
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary);
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    border: 1px solid var(--border-color);
+  }
+
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center; justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .overlay.open { display: flex; }
+  .modal {
+    background: var(--card-bg);
+    color: var(--text-primary);
+    width: 100%;
+    max-width: 500px;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  }
+  .modal h2 { margin: 0 0 6px; font-size: 1.3rem; font-weight: 600; }
+  .modal .sub { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; }
+
+  .field { margin-bottom: 14px; position: relative; }
+  .field label {
+    display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px; font-size: 0.95rem;
+    outline: none; background: var(--bg-main);
+  }
+  .field input:focus { border-color: var(--accent-blue); background: #fff; }
+  .field .help {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+  }
+
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+  .filter-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .filter-status-row .count-line {
+    margin: 0;
+  }
+  .mobile-genre-toggle {
+    margin-bottom: 0 !important;
+  }
+  .toolbar {
+    margin-bottom: 14px;
+  }
+  @media (max-width: 768px) {
+    main { padding: 4px 12px 60px; }
+  }
+
+  .mobile-genre-toggle {
+    display: none;
+    margin-bottom: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 8px 14px;
+    color: var(--text-primary);
+  }
+
+  @media (max-width: 768px) {
+    .brand-bar { padding: 24px 16px 12px; text-align: center; }
+    main { padding: 8px 12px 60px; }
+    .toolbar { 
+      padding: 8px;
+      gap: 8px;
+    }
+    .toolbar .field-search { flex-basis: 100%; width: 100%; }
+    .type-toggle, #sortSel, #exportBtn, #settingsBtn, .tmdb-status {
+      display: none !important;
+    }
+    .mobile-genre-toggle { display: inline-flex; align-items: center; gap: 6px; }
+    .genre-pills { display: none; margin-bottom: 14px; }
+    .genre-pills.mobile-open { display: flex; }
+  }
+
+  .card-info {
+    padding: 4px 10px 0px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+  }
+  .card-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 4px;
+  }
+  .card-meta {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0px;
+  }
 </style>
 </head>
 <body>
@@ -558,8 +448,7 @@
 <main>
   <div class="toolbar">
     <div class="field-search">
-      <input type="text" id="search" placeholder="Hľadať v denníku alebo zadať názov z TMDb…" autocomplete="off">
-      <div class="suggest-box" id="mainSuggestBox"></div>
+      <input type="text" id="search" placeholder="Hľadať v denníku…" autocomplete="off">
     </div>
     <div class="type-toggle" id="typeToggle">
       <button data-type="all" class="active">Všetko</button>
@@ -635,16 +524,6 @@
         <button type="submit" class="btn btn-large-add">Uložiť</button>
       </div>
     </form>
-
-    <hr style="margin:22px 0;border:none;border-top:1px solid var(--border-color);">
-
-    <h2 style="font-size:1.3rem;">Trakt.tv</h2>
-    <p class="sub" id="traktStatusText">Zisťujem stav pripojenia…</p>
-    <div class="modal-actions" style="justify-content:flex-start;gap:10px;">
-      <a class="btn btn-large-add" id="traktConnectBtn" href="#" style="text-decoration:none;display:inline-block;">Pripojiť Trakt účet</a>
-      <button type="button" class="btn" id="traktSyncBtn" style="display:none;">Synchronizovať teraz</button>
-    </div>
-    <p class="sub" id="traktSyncResult" style="margin-top:10px;"></p>
   </div>
 </div>
 
@@ -670,15 +549,6 @@ async function apiGetAll(){
   const list = await res.json();
   return list.map(applyLegacyRating);
 }
-async function apiAdd(entry){
-  const res = await fetch(API_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify(entry)
-  });
-  if(!res.ok) throw new Error('API ' + res.status);
-  return applyLegacyRating(await res.json());
-}
 async function apiPatch(patch){
   const res = await fetch(API_URL, {
     method:'PATCH',
@@ -688,7 +558,6 @@ async function apiPatch(patch){
   if(!res.ok) throw new Error('API ' + res.status);
   return await res.json();
 }
-
 async function apiDelete(id){
   const res = await fetch(API_URL, {
     method:'DELETE',
@@ -732,7 +601,6 @@ function escapeHTML(s){
   return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* Zlúčenie hodnotení */
 function getCombinedRating(item){
   return item.rating != null && Number.isFinite(Number(item.rating)) ? Number(item.rating) : null;
 }
@@ -760,7 +628,6 @@ function rowHTML(item){
     ? `<span class="icon-chip provider-chip" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${hqLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
     : `<span class="icon-chip provider-chip empty" title="Nezistené, kde sledovať">—</span>`;
 
-  // Bez režiséra / created by
   const metaParts = [];
   if(item.year) metaParts.push(item.year);
   if(item.genre) {
@@ -783,9 +650,6 @@ function rowHTML(item){
     </div>
   </div>`;
 }
-
-
-
 
 function applyFiltersAndRender(){
   renderGenrePills();
@@ -847,7 +711,6 @@ async function performDelete(id){
   }
 }
 
-/* Dlhé podržanie na riadku = potvrdenie zmazania */
 const deleteConfirmOverlay = document.getElementById('deleteConfirmOverlay');
 const deleteConfirmTitle = document.getElementById('deleteConfirmTitle');
 let pendingDeleteId = null;
@@ -902,7 +765,6 @@ rowsEl.addEventListener('click', e=>{
   }
 }, true);
 
-/* Jedno spoločné hodnotenie */
 const ratingOverlay = document.getElementById('ratingOverlay');
 const ratingInput = document.getElementById('f-rating');
 function openRatingModal(id){
@@ -947,7 +809,6 @@ function refreshTmdbStatus(){
 document.getElementById('settingsBtn').addEventListener('click', ()=>{
   document.getElementById('f-apikey').value = getApiKey();
   settingsOverlay.classList.add('open');
-  refreshTraktStatus();
 });
 document.getElementById('settingsCancel').addEventListener('click', ()=> settingsOverlay.classList.remove('open'));
 document.getElementById('settingsForm').addEventListener('submit', e=>{
@@ -955,19 +816,33 @@ document.getElementById('settingsForm').addEventListener('submit', e=>{
   setApiKey(document.getElementById('f-apikey').value.trim());
   settingsOverlay.classList.remove('open');
   refreshTmdbStatus();
-
-/* Mobilné prepínanie žánrov */
-const genreToggleBtn = document.getElementById('genreToggleBtn');
-if(genreToggleBtn){
-  genreToggleBtn.addEventListener('click', ()=>{
-    genrePillsEl.classList.toggle('mobile-open');
-    genreToggleBtn.textContent = genrePillsEl.classList.contains('mobile-open') ? '✕ Zavrieť žánre' : '🏷️ Žánre';
-  });
-}
-
 });
 refreshTmdbStatus();
 
+/* --- OPRAVENÉ: Funkcionalita pre export dát do JSON --- */
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const exportData = data.map(item => ({
+    title: item.title,
+    originalTitle: item.original || '',
+    type: item.type,
+    year: item.year,
+    genre: item.genre,
+    rating: getCombinedRating(item),
+    tmdbRating: item.public || null,
+    provider: item.providerName || ''
+  }));
+  
+  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.href = url;
+  downloadAnchor.download = "filmopolis_export_" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  URL.revokeObjectURL(url);
+});
+
 /* Mobilné prepínanie žánrov */
 const genreToggleBtn = document.getElementById('genreToggleBtn');
 if(genreToggleBtn){
@@ -977,190 +852,10 @@ if(genreToggleBtn){
   });
 }
 
-
-/* --- Trakt.tv prepojenie --- */
-const TRAKT_CLIENT_ID = 'czkOk8dzfiN_ePt4ZW-haAq_GlyajWEqbBJqwl9XVNs';
-const traktConnectBtn = document.getElementById('traktConnectBtn');
-const traktSyncBtn = document.getElementById('traktSyncBtn');
-const traktStatusText = document.getElementById('traktStatusText');
-const traktSyncResult = document.getElementById('traktSyncResult');
-
-traktConnectBtn.addEventListener('click', e=>{
-  e.preventDefault();
-  const redirectUri = location.origin + '/oauth/callback';
-  const url = `https://trakt.tv/oauth/authorize?response_type=code&client_id=${TRAKT_CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}`;
-  window.location.href = url;
-});
-
-async function refreshTraktStatus(){
-  try{
-    const res = await fetch('/api/trakt-status');
-    const s = await res.json();
-    if(s.connected){
-      traktStatusText.textContent = 'Trakt účet je pripojený.';
-      traktConnectBtn.textContent = 'Znova prepojiť Trakt účet';
-      traktSyncBtn.style.display = 'inline-block';
-    } else {
-      traktStatusText.textContent = 'Trakt účet zatiaľ nie je pripojený.';
-      traktConnectBtn.textContent = 'Pripojiť Trakt účet';
-      traktSyncBtn.style.display = 'none';
-    }
-  }catch(err){
-    traktStatusText.textContent = 'Nepodarilo sa zistiť stav pripojenia.';
-  }
-}
-
-traktSyncBtn.addEventListener('click', async ()=>{
-  traktSyncBtn.disabled = true;
-  traktSyncResult.textContent = 'Synchronizujem…';
-  try{
-    const res = await fetch('/api/trakt-sync', { method:'POST' });
-    const result = await res.json();
-    if(!res.ok) throw new Error(result.error || 'Chyba synchronizácie');
-    traktSyncResult.textContent = `Hotovo — pridaných ${result.added}, aktualizovaných ${result.updated} titulov.`;
-    data = await apiGetAll();
-    applyFiltersAndRender();
-  }catch(err){
-    traktSyncResult.textContent = 'Synchronizácia zlyhala: ' + err.message;
-  }finally{
-    traktSyncBtn.disabled = false;
-  }
-});
-
-async function runTmdbSearch(query, targetBox){
-  const key = getApiKey();
-  targetBox.innerHTML = `<div style="padding:8px 12px;font-size:0.8rem;color:var(--text-secondary);">Vyhľadávam...</div>`;
-  targetBox.classList.add('open');
-  try {
-    const isBearer = key.startsWith('eyJ');
-    const url = isBearer
-      ? `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(query)}&language=sk-SK`
-      : `https://api.themoviedb.org/3/search/multi?api_key=${encodeURIComponent(key)}&query=${encodeURIComponent(query)}&language=sk-SK`;
-    const res = await fetch(url, isBearer ? { headers:{ Authorization:`Bearer ${key}` } } : {});
-    const json = await res.json();
-    const results = (json.results||[]).filter(r => r.media_type==='movie' || r.media_type==='tv').slice(0,6);
-    if(!results.length){
-      targetBox.innerHTML = `<div style="padding:8px 12px;font-size:0.8rem;color:var(--text-secondary);">Nenašli sa žiadne výsledky</div>`;
-      return;
-    }
-    targetBox.innerHTML = results.map(r => {
-      const name = r.title || r.name || '';
-      const date = r.release_date || r.first_air_date || '';
-      const year = date ? date.slice(0,4) : '';
-      const type = r.media_type === 'tv' ? 'seriál' : 'film';
-      const poster = r.poster_path ? `https://image.tmdb.org/t/p/w92${r.poster_path}` : '';
-      const rating = r.vote_average ? Math.round(r.vote_average*10) : '';
-      return `<div class="suggest-item" data-id="${r.id}" data-type="${r.media_type}">
-        ${poster ? `<img src="${poster}">` : '<div style="width:32px;height:48px;background:#eee;border-radius:4px;"></div>'}
-        <div>
-          <div class="si-title">${escapeHTML(name)}</div>
-          <div class="si-meta">${type === 'seriál' ? 'Seriál' : 'Film'}${year ? ' · '+year : ''}${rating ? ' · '+rating+'%' : ''}</div>
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    targetBox.innerHTML = `<div style="padding:8px 12px;font-size:0.8rem;color:red;">Chyba pripojenia</div>`;
-  }
-}
-
-async function handleSelectTmdbItem(tmdbId, mediaType, onSuccess){
-  const key = getApiKey();
-  const isBearer = key.startsWith('eyJ');
-  try {
-    const detailUrl = isBearer
-      ? `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?append_to_response=credits,watch/providers&language=sk-SK`
-      : `https://api.themoviedb.org/3/${mediaType}/${tmdbId}?api_key=${encodeURIComponent(key)}&append_to_response=credits,watch/providers&language=sk-SK`;
-    const res = await fetch(detailUrl, isBearer ? { headers:{ Authorization:`Bearer ${key}` } } : {});
-    const d = await res.json();
-
-    let director = '';
-    if(d.credits && d.credits.crew){
-      const dirObj = d.credits.crew.find(c => c.job === 'Director');
-      if(dirObj) director = dirObj.name;
-    }
-    if(!director && d.created_by && d.created_by.length){
-      director = d.created_by.map(c=>c.name).join(', ');
-    }
-
-    let actors = '';
-    if(d.credits && d.credits.cast){
-      actors = d.credits.cast.slice(0, 3).map(a=>a.name).join(', ');
-    }
-
-    const genre = (d.genres || []).map(g => g.name).join(', ');
-    const provider = extractProvider(d);
-
-    const entry = {
-      title: d.title || d.name,
-      original: d.original_title || d.original_name || '',
-      type: mediaType === 'tv' ? 'seriál' : 'film',
-      year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
-      rating: null,
-      public: d.vote_average ? Math.round(d.vote_average * 10) : null,
-      poster: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : '',
-      director: director,
-      actors: actors,
-      genre: genre,
-      providerName: provider.providerName,
-      providerLogo: provider.providerLogo,
-      tmdbId: Number(tmdbId)
-    };
-    const saved = await apiAdd(entry);
-    data.push(saved);
-    applyFiltersAndRender();
-    if(onSuccess) onSuccess(saved);
-  } catch(err) {
-    console.error(err);
-  }
-}
-
-/* HLAVNÝ VYHĽADÁVAČ PREPOJENÝ S TMDb A NAŠEPKÁVANÍM */
 const mainSearchInput = document.getElementById('search');
-const mainSuggestBox = document.getElementById('mainSuggestBox');
-let mainDebounceTimer = null;
-
-function resetMainSuggest(){ 
-  mainSuggestBox.classList.remove('open'); 
-  mainSuggestBox.innerHTML = ''; 
-}
-
 mainSearchInput.addEventListener('input', e => {
-  const q = e.target.value;
-  state.search = q;
+  state.search = e.target.value;
   applyFiltersAndRender();
-  
-  clearTimeout(mainDebounceTimer);
-  if (!getApiKey() || q.trim().length < 2) { 
-    resetMainSuggest(); 
-    return; 
-  }
-  mainDebounceTimer = setTimeout(() => {
-    runTmdbSearch(q.trim(), mainSuggestBox);
-    // Upravíme text v meta položkách v hlavnom našepkávači pre lepšiu zrozumiteľnosť
-    setTimeout(() => {
-      mainSuggestBox.querySelectorAll('.suggest-item .si-meta').forEach(el => {
-        el.textContent = 'Pridať z TMDb · ' + el.textContent;
-      });
-    }, 50);
-  }, 300);
-});
-
-mainSuggestBox.addEventListener('click', async e => {
-  const item = e.target.closest('.suggest-item');
-  if (!item) return;
-  await handleSelectTmdbItem(item.dataset.id, item.dataset.type, () => {
-    mainSearchInput.value = '';
-    state.search = '';
-    applyFiltersAndRender();
-    resetMainSuggest();
-  });
-});
-
-// Zatvorenie hlavného našepkávača pri kliknutí mimo
-document.addEventListener('click', e => {
-  if (!mainSearchInput.contains(e.target) && !mainSuggestBox.contains(e.target)) {
-    resetMainSuggest();
-  }
 });
 
 (async function init(){
@@ -1172,87 +867,7 @@ document.addEventListener('click', e => {
     return;
   }
   applyFiltersAndRender();
-  enrichExistingEntries();
 })();
-let enrichmentStarted = false;
-async function tmdbRequest(path, params={}){
-  const key = getApiKey();
-  if(!key) throw new Error('TMDb API key is missing');
-  const isBearer = key.startsWith('eyJ');
-  const query = new URLSearchParams({language:'sk-SK', ...params});
-  if(!isBearer) query.set('api_key', key);
-  const res = await fetch(`https://api.themoviedb.org/3/${path}?${query}`, isBearer ? {headers:{Authorization:`Bearer ${key}`}} : {});
-  if(!res.ok) throw new Error(`TMDb ${res.status}`);
-  return res.json();
-}
-
-function extractProvider(d){
-  const wp = d['watch/providers']?.results;
-  if(!wp) return { providerName: '', providerLogo: '' };
-  const region = wp.SK || wp.CZ || wp.AT || wp.US || Object.values(wp)[0];
-  if(!region) return { providerName: '', providerLogo: '' };
-  const list = region.flatrate || region.free || region.ads || region.rent || region.buy;
-  if(!list || !list.length) return { providerName: '', providerLogo: '' };
-  const p = list[0];
-  return {
-    providerName: p.provider_name || '',
-    providerLogo: p.logo_path ? `https://image.tmdb.org/t/p/w92${p.logo_path}` : ''
-  };
-}
-
-function detailsFromTmdb(d, mediaType){
-  let director = '';
-  if(d.credits?.crew){
-    const directors = d.credits.crew.filter(c => c.job === 'Director').slice(0,2);
-    director = directors.map(c=>c.name).join(', ');
-  }
-  if(!director && d.created_by?.length) director = d.created_by.map(c=>c.name).join(', ');
-  const provider = extractProvider(d);
-  return {
-    tmdbId: d.id,
-    year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
-    public: d.vote_average ? Math.round(d.vote_average * 10) : null,
-    poster: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : '',
-    director,
-    actors: d.credits?.cast?.slice(0,3).map(a=>a.name).join(', ') || '',
-    genre: (d.genres || []).map(g => g.name).join(', '),
-    providerName: provider.providerName,
-    providerLogo: provider.providerLogo,
-    type: mediaType === 'tv' ? 'seriál' : 'film'
-  };
-}
-
-async function enrichExistingEntries(){
-  if(enrichmentStarted || !getApiKey()) return;
-  enrichmentStarted = true;
-  const pending = data.filter(item => !item.tmdbId || !item.poster || !item.year || !item.director || !item.actors || !item.genre || item.public == null || item.providerLogo == null);
-  for(const item of pending){
-    try{
-      const mediaType = item.type === 'seriál' ? 'tv' : 'movie';
-      let tmdbId = item.tmdbId;
-      if(!tmdbId){
-        const search = await tmdbRequest(`search/${mediaType}`, {query:item.original || item.title});
-        const candidates = search.results || [];
-        const targetYear = Number(item.year);
-        const match = candidates.sort((a,b)=>{
-          if(!targetYear) return 0;
-          const ay = Number((a.release_date || a.first_air_date || '').slice(0,4));
-          const by = Number((b.release_date || b.first_air_date || '').slice(0,4));
-          return Math.abs(ay-targetYear) - Math.abs(by-targetYear);
-        })[0];
-        if(!match) continue;
-        tmdbId = match.id;
-      }
-      const details = await tmdbRequest(`${mediaType}/${tmdbId}`, {append_to_response:'credits,watch/providers'});
-      const patch = detailsFromTmdb(details, mediaType);
-      Object.assign(item, patch);
-      applyFiltersAndRender();
-      await apiPatch({ id: item.id, ...patch });
-    }catch(err){
-      console.warn('Nepodarilo sa doplniť TMDb údaje pre', item.title, err);
-    }
-  }
-}
 </script>
 </body>
 </html>
