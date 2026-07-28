@@ -219,7 +219,6 @@
   .suggest-item .si-title { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); }
   .suggest-item .si-meta { font-size: 0.72rem; color: var(--text-secondary); }
 
-  /* Desktop: flex/flow na celú šírku obrazovky */
   .list-container {
     display: flex;
     flex-wrap: wrap;
@@ -239,8 +238,8 @@
     -webkit-user-select: none;
     user-select: none;
     touch-action: manipulation;
-    width: calc((100% - (16px * 6)) / 7);
-    min-width: 140px;
+    width: 146.66px;
+    flex-shrink: 0;
   }
   .row-card:hover {
     border-color: #d2d7de;
@@ -250,7 +249,7 @@
 
   .poster-frame {
     width: 100%;
-    aspect-ratio: 2 / 3;
+    height: 220px;
     border-radius: 14px 14px 0 0;
     overflow: hidden;
     background: #e9ecf0;
@@ -278,16 +277,16 @@
     padding: 10px;
   }
 
-  /* Tmavý overlay pre nehodnotené filmy/seriály */
+  /* Tmavý overlay 75% pre nehodnotené filmy/seriály */
   .poster-overlay-unwatched {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.3); /* 30% tmavý overlay */
+    background: rgba(0, 0, 0, 0.75);
     display: flex;
     align-items: center;
     justify-content: center;
     color: #ffffff;
-    pointer-events: none; /* Umožní kliknúť cez overlay na odkaz */
+    pointer-events: none;
     transition: opacity 0.2s ease;
   }
   .poster-overlay-unwatched svg {
@@ -440,6 +439,10 @@
       width: auto;
       min-width: 0;
     }
+    .poster-frame {
+      height: auto;
+      aspect-ratio: 2 / 3;
+    }
   }
 
   .card-info {
@@ -498,7 +501,7 @@
   </div>
 
   <div class="filter-status-row">
-    <button type="button" class="btn mobile-genre-toggle" id="genreToggleBtn">🏷️ Filtre (Žánre a Roky)</button>
+    <button type="button" class="btn mobile-genre-toggle" id="genreToggleBtn">🏷️ Filtre</button>
   </div>
   <div class="genre-pills" id="genrePills"></div>
 
@@ -619,14 +622,25 @@ function splitGenres(genreStr){
 function renderGenrePills(){
   const allGenres = new Set();
   const allYears = new Set();
+  const allProviders = new Set();
+
   data.forEach(d => {
     splitGenres(d.genre).forEach(g => allGenres.add(g));
     if(d.year) allYears.add(String(d.year));
+    if(d.providerName) allProviders.add(d.providerName);
   });
+
   const sortedGenres = Array.from(allGenres).sort((a,b)=>a.localeCompare(b,'sk'));
   const sortedYears = Array.from(allYears).sort((a,b)=>b.localeCompare(a));
-  
-  const combinedFilters = [...sortedGenres, ...sortedYears];
+  const sortedProviders = Array.from(allProviders).sort((a,b)=>a.localeCompare(b,'sk'));
+
+  const combinedFilters = [
+    '👁️ Nepozreté',
+    ...sortedProviders.map(p => '📺 ' + p),
+    ...sortedGenres,
+    ...sortedYears
+  ];
+
   if(!combinedFilters.length){ genrePillsEl.innerHTML = ''; return; }
   
   genrePillsEl.innerHTML = combinedFilters.map(f =>
@@ -656,7 +670,6 @@ function rowHTML(item){
   const hqPoster = item.poster ? item.poster.replace(/\/w(92|154|185)\//, '/w500/') : '';
   const hqLogo = item.providerLogo ? item.providerLogo.replace(/\/w(45|92)\//, '/w154/') : '';
 
-  // Overlay s ikonou preškrtnutého oka ak film nemá hodnotenie
   const unwatchedOverlay = combined == null 
     ? `<div class="poster-overlay-unwatched" title="Ešte nebolo dopozerané (bez hodnotenia)">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -715,7 +728,14 @@ function applyFiltersAndRender(){
     list = list.filter(d => {
       const itemGenres = splitGenres(d.genre);
       const itemYear = d.year ? String(d.year) : '';
-      return Array.from(activeFilters).some(f => itemGenres.includes(f) || itemYear === f);
+      const itemProvider = d.providerName ? '📺 ' + d.providerName : '';
+      const isUnwatched = getCombinedRating(d) == null;
+
+      return Array.from(activeFilters).some(f => {
+        if(f === '👁️ Nepozreté') return isUnwatched;
+        if(f.startsWith('📺 ')) return itemProvider === f;
+        return itemGenres.includes(f) || itemYear === f;
+      });
     });
   }
 
@@ -897,7 +917,7 @@ const genreToggleBtn = document.getElementById('genreToggleBtn');
 if(genreToggleBtn){
   genreToggleBtn.addEventListener('click', ()=>{
     genrePillsEl.classList.toggle('mobile-open');
-    genreToggleBtn.textContent = genrePillsEl.classList.contains('mobile-open') ? '✕ Zavrieť filtre' : '🏷️ Filtre (Žánre a Roky)';
+    genreToggleBtn.textContent = genrePillsEl.classList.contains('mobile-open') ? '✕ Zavrieť filtre' : '🏷️ Filtre';
   });
 }
 
