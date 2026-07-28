@@ -297,8 +297,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
-    padding: 2px 8px 6px 8px;
+    gap: 4px;
+    padding: 2px 6px 6px 6px;
   }
 
   .icon-chip {
@@ -314,20 +314,35 @@
     overflow: hidden;
     background: var(--bg-main);
     color: var(--text-primary);
-    padding: 0 6px;
+    padding: 0 5px;
   }
 
   .rating-chip {
     background: transparent;
     color: var(--text-primary);
-    gap: 4px;
-    padding: 0 4px;
+    gap: 3px;
+    padding: 0 2px;
   }
   .rating-chip:hover { background: #f0f2f5; }
   .rating-star {
     color: #8a5cf5;
     font-size: 0.85rem;
     line-height: 1;
+  }
+
+  /* Štýl pre ikonu info (poznámok) */
+  .info-chip {
+    background: transparent;
+    color: var(--text-secondary);
+    padding: 0 4px;
+    transition: color 0.2s, background 0.2s;
+  }
+  .info-chip:hover {
+    background: #f0f2f5;
+    color: var(--text-primary);
+  }
+  .info-chip.has-notes {
+    color: var(--accent-blue);
   }
 
   .provider-chip {
@@ -377,13 +392,18 @@
   .field label {
     display: block; font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px;
   }
-  .field input {
+  .field input, .field textarea {
     width: 100%; padding: 10px 12px;
     border: 1px solid var(--border-color);
     border-radius: 8px; font-size: 0.95rem;
     outline: none; background: var(--bg-main);
+    font-family: inherit;
   }
-  .field input:focus { border-color: var(--accent-blue); background: #fff; }
+  .field textarea {
+    resize: vertical;
+    min-height: 100px;
+  }
+  .field input:focus, .field textarea:focus { border-color: var(--accent-blue); background: #fff; }
   .field .help {
     display: block;
     margin-top: 6px;
@@ -523,6 +543,25 @@
       <div class="modal-actions">
         <button type="button" class="btn" id="ratingCancel">Zrušiť</button>
         <button type="submit" class="btn btn-large-add">Uložiť hodnotenie</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Notes modal -->
+<div class="overlay" id="notesOverlay">
+  <div class="modal">
+    <h2 id="notesTitle">Osobné poznámky</h2>
+    <p class="sub">Poznámky, dojmy a zaujímavosti k titulu</p>
+    <form id="notesForm">
+      <input type="hidden" id="notesId">
+      <div class="field">
+        <label for="f-notes">Moje dojmy a poznámky</label>
+        <textarea id="f-notes" placeholder="Napr. Skvelá hudba, bavil ma záver..."></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="notesCancel">Zrušiť</button>
+        <button type="submit" class="btn btn-large-add">Uložiť poznámku</button>
       </div>
     </form>
   </div>
@@ -692,6 +731,16 @@ function rowHTML(item){
   const ratingTitleText = combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie';
   const ratingChip = `<button class="icon-chip rating-chip" data-rate="${item.id}" title="${ratingTitleText}"><span class="rating-star">★</span> <span>${ratingText}</span></button>`;
 
+  const hasNotes = item.notes && item.notes.trim().length > 0;
+  const notesTitleText = hasNotes ? 'Upraviť poznámky' : 'Pridať poznámku';
+  const infoChip = `<button class="icon-chip info-chip${hasNotes ? ' has-notes' : ''}" data-notes="${item.id}" title="${notesTitleText}">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="16" x2="12" y2="12"></line>
+      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+    </svg>
+  </button>`;
+
   const providerChip = hqLogo
     ? `<span class="icon-chip provider-chip" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${hqLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
     : `<span class="icon-chip provider-chip empty" title="Nezistené, kde sledovať">—</span>`;
@@ -714,6 +763,7 @@ function rowHTML(item){
     </div>
     <div class="icon-row">
       ${ratingChip}
+      ${infoChip}
       ${providerChip}
     </div>
   </div>`;
@@ -764,6 +814,11 @@ rowsEl.addEventListener('click', e=>{
   const rate = e.target.closest('[data-rate]');
   if(rate){
     openRatingModal(Number(rate.dataset.rate));
+    return;
+  }
+  const notes = e.target.closest('[data-notes]');
+  if(notes){
+    openNotesModal(Number(notes.dataset.notes));
     return;
   }
 });
@@ -871,6 +926,40 @@ document.getElementById('ratingForm').addEventListener('submit', async e=>{
   }
 });
 
+/* Modálne okno pre osobné poznámky */
+const notesOverlay = document.getElementById('notesOverlay');
+const notesInput = document.getElementById('f-notes');
+function openNotesModal(id){
+  const item = data.find(d => d.id === id);
+  if(!item) return;
+  document.getElementById('notesId').value = id;
+  document.getElementById('notesTitle').textContent = item.title;
+  notesInput.value = item.notes || '';
+  notesOverlay.classList.add('open');
+  setTimeout(()=>notesInput.focus(), 0);
+}
+function closeNotesModal(){ notesOverlay.classList.remove('open'); }
+document.getElementById('notesCancel').addEventListener('click', closeNotesModal);
+notesOverlay.addEventListener('click', e=>{ if(e.target === notesOverlay) closeNotesModal(); });
+document.getElementById('notesForm').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const item = data.find(d => d.id === Number(document.getElementById('notesId').value));
+  if(!item) return;
+  const newNotes = notesInput.value.trim();
+  const prevNotes = item.notes;
+  item.notes = newNotes;
+  applyFiltersAndRender();
+  closeNotesModal();
+  try{
+    await apiPatch({ id: item.id, notes: newNotes });
+  }catch(err){
+    console.error('Uloženie poznámky zlyhalo:', err);
+    item.notes = prevNotes;
+    applyFiltersAndRender();
+    alert('Uloženie poznámky sa nepodarilo — skontroluj pripojenie.');
+  }
+});
+
 const settingsOverlay = document.getElementById('settingsOverlay');
 function refreshTmdbStatus(){
   const on = !!getApiKey();
@@ -890,6 +979,7 @@ document.getElementById('settingsForm').addEventListener('submit', e=>{
 });
 refreshTmdbStatus();
 
+/* Export dát s novým poľom 'notes' */
 document.getElementById('exportBtn').addEventListener('click', () => {
   const exportData = data.map(item => ({
     title: item.title,
@@ -898,6 +988,7 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     year: item.year,
     genre: item.genre,
     rating: getCombinedRating(item),
+    notes: item.notes || '',
     tmdbRating: item.public || null,
     provider: item.providerName || ''
   }));
@@ -1014,6 +1105,7 @@ async function handleSelectTmdbItem(tmdbId, mediaType){
       type: mediaType === 'tv' ? 'seriál' : 'film',
       year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
       rating: null,
+      notes: '',
       public: d.vote_average ? Math.round(d.vote_average * 10) : null,
       poster: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : '',
       director: director,
