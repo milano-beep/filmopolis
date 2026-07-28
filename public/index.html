@@ -278,6 +278,22 @@
     padding: 10px;
   }
 
+  /* Tmavý overlay pre nehodnotené filmy/seriály */
+  .poster-overlay-unwatched {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3); /* 30% tmavý overlay */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    pointer-events: none; /* Umožní kliknúť cez overlay na odkaz */
+    transition: opacity 0.2s ease;
+  }
+  .poster-overlay-unwatched svg {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  }
+
   .icon-row {
     display: flex;
     align-items: center;
@@ -640,14 +656,24 @@ function rowHTML(item){
   const hqPoster = item.poster ? item.poster.replace(/\/w(92|154|185)\//, '/w500/') : '';
   const hqLogo = item.providerLogo ? item.providerLogo.replace(/\/w(45|92)\//, '/w154/') : '';
 
+  // Overlay s ikonou preškrtnutého oka ak film nemá hodnotenie
+  const unwatchedOverlay = combined == null 
+    ? `<div class="poster-overlay-unwatched" title="Ešte nebolo dopozerané (bez hodnotenia)">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        </svg>
+       </div>`
+    : '';
+
   const posterInner = hqPoster
     ? `<img src="${hqPoster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'">`
     : `<div class="poster-placeholder">${escapeHTML(item.title)}</div>`;
     
   const tmdbUrl = item.tmdbId ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
   const posterHTML = tmdbUrl
-    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}</a>`
-    : `<div class="poster-frame" title="${escapeHTML(item.title)}">${posterInner}</div>`;
+    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}${unwatchedOverlay}</a>`
+    : `<div class="poster-frame" title="${escapeHTML(item.title)}">${posterInner}${unwatchedOverlay}</div>`;
 
   const ratingText = combined != null ? combined + '%' : '?';
   const ratingTitleText = combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie';
