@@ -8,14 +8,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-main: #f2f4f7;
-    --card-bg: #ffffff;
-    --text-primary: #1d1d1f;
-    --text-secondary: #6e6e73;
-    --accent-blue: #007aff;
-    --accent-blue-hover: #006ee6;
-    --border-color: #e2e5e9;
-    --card-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    color-scheme: dark;
+    --bg-main: #16141d;
+    --card-bg: #201d2a;
+    --surface-2: #2a2636;
+    --text-primary: #f1edf7;
+    --text-secondary: #a59fb3;
+    --accent: #9b87ff;
+    --accent-hover: #b0a0ff;
+    --on-accent: #17141f;
+    --star: #f4b942;
+    --border-color: #34303f;
+    --border-strong: #4a4558;
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
     --radius: 16px;
   }
 
@@ -30,10 +35,14 @@
   }
 
   .brand-bar {
-    max-width: 100%;
+    max-width: 1680px;
     margin: 0 auto;
-    padding: 32px 24px 16px;
-    text-align: center;
+    padding: 32px 28px 16px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px 32px;
+    flex-wrap: wrap;
   }
   .brand-bar h1 {
     font-family: 'Outfit', sans-serif;
@@ -42,14 +51,11 @@
     letter-spacing: -0.02em;
     margin: 0;
     color: var(--text-primary);
-    background: linear-gradient(135deg, #1d1d1f 0%, #434346 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
   }
 
   main {
-    padding: 8px 24px 80px;
-    max-width: 100%;
+    padding: 8px 28px 80px;
+    max-width: 1680px;
     margin: 0 auto;
   }
 
@@ -84,8 +90,8 @@
     transition: all 0.2s;
   }
   .toolbar input[type=text]:focus {
-    background: #fff;
-    border-color: var(--accent-blue);
+    background: var(--surface-2);
+    border-color: var(--accent);
   }
 
   select, .btn {
@@ -99,11 +105,11 @@
     cursor: pointer;
     transition: all 0.2s;
   }
-  select:hover, .btn:hover { background: #e8e8ed; }
+  select:hover, .btn:hover { background: var(--surface-2); }
 
   .btn.btn-large-add {
-    background: var(--accent-blue);
-    color: #ffffff;
+    background: var(--accent);
+    color: var(--on-accent);
     font-size: 0.9rem;
     font-weight: 600;
     padding: 12px 20px;
@@ -112,7 +118,7 @@
     box-shadow: none;
   }
   .btn.btn-large-add:hover {
-    background: var(--accent-blue-hover);
+    background: var(--accent-hover);
   }
 
   .btn.ghost { background: transparent; }
@@ -143,9 +149,9 @@
     transition: all 0.2s;
   }
   .type-toggle button.active {
-    background: #ffffff;
+    background: var(--surface-2);
     color: var(--text-primary);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
   }
 
   .icon-only-btn {
@@ -163,7 +169,7 @@
     transition: all 0.2s;
   }
   .icon-only-btn:hover {
-    background: #e8e8ed;
+    background: var(--surface-2);
   }
 
   .tmdb-status {
@@ -179,9 +185,80 @@
 
   .genre-pills {
     display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 0 22px;
+  }
+  .filter-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .fg-label {
+    flex: 0 0 64px;
+    padding-top: 7px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .fg-pills {
+    display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin: 0 0 18px;
+    min-width: 0;
+  }
+  .gp-count {
+    margin-left: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    opacity: 0.6;
+  }
+  .genre-pill.more {
+    background: transparent;
+    border-style: dashed;
+  }
+  .genre-pill.clear {
+    background: transparent;
+    color: var(--text-primary);
+    border-color: var(--border-strong);
+  }
+  .filter-clear-row { padding-left: 78px; }
+
+  .stats { display: flex; gap: 30px; }
+  .stat {
+    background: none;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+  }
+  .stat b {
+    display: block;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+  }
+  .stat span { font-size: 0.74rem; color: var(--text-secondary); }
+  button.stat { cursor: pointer; }
+  button.stat:hover span { color: var(--text-primary); }
+  button.stat.active b { color: var(--accent); }
+
+  .type-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 3px 9px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: rgba(22, 20, 29, 0.78);
+    backdrop-filter: blur(6px);
+    border-radius: 999px;
+    pointer-events: none;
   }
   .genre-pill {
     font-size: 0.78rem;
@@ -194,17 +271,17 @@
     cursor: pointer;
     transition: all 0.15s;
   }
-  .genre-pill:hover { border-color: #c3c9d1; }
+  .genre-pill:hover { border-color: var(--border-strong); color: var(--text-primary); }
   .genre-pill.active {
-    background: var(--accent-blue);
-    color: #ffffff;
-    border-color: var(--accent-blue);
+    background: var(--accent);
+    color: var(--on-accent);
+    border-color: var(--accent);
   }
 
   .suggest-box {
     position: absolute; top: 100%; left: 0; right: 0;
-    background: #fff; border: 1px solid var(--border-color);
-    border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    background: var(--card-bg); border: 1px solid var(--border-strong);
+    border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     z-index: 10; max-height: 250px; overflow: auto; display: none;
     margin-top: 4px;
   }
@@ -220,9 +297,9 @@
   .suggest-item .si-meta { font-size: 0.72rem; color: var(--text-secondary); }
 
   .list-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 22px 20px;
   }
 
   .row-card {
@@ -238,21 +315,20 @@
     -webkit-user-select: none;
     user-select: none;
     touch-action: manipulation;
-    width: 146.66px;
-    flex-shrink: 0;
+    min-width: 0;
   }
   .row-card:hover {
-    border-color: #d2d7de;
-    box-shadow: 0 10px 26px rgba(15,23,42,0.08);
+    border-color: var(--border-strong);
+    box-shadow: 0 14px 30px rgba(0,0,0,0.45);
     transform: translateY(-2px);
   }
 
   .poster-frame {
     width: 100%;
-    height: 220px;
+    aspect-ratio: 2 / 3;
     border-radius: 14px 14px 0 0;
     overflow: hidden;
-    background: #e9ecf0;
+    background: var(--surface-2);
     flex-shrink: 0;
     display: block;
     position: relative;
@@ -281,7 +357,7 @@
   .poster-overlay-unwatched {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    background: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -290,7 +366,7 @@
     transition: opacity 0.2s ease;
   }
   .poster-overlay-unwatched svg {
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.9)) drop-shadow(0 2px 14px rgba(0, 0, 0, 0.85));
   }
 
   .icon-row {
@@ -323,9 +399,9 @@
     gap: 3px;
     padding: 0 2px;
   }
-  .rating-chip:hover { background: #f0f2f5; }
+  .rating-chip:hover { background: var(--surface-2); }
   .rating-star {
-    color: #8a5cf5;
+    color: var(--star);
     font-size: 0.85rem;
     line-height: 1;
   }
@@ -338,11 +414,11 @@
     transition: color 0.2s, background 0.2s;
   }
   .info-chip:hover {
-    background: #f0f2f5;
+    background: var(--surface-2);
     color: var(--text-primary);
   }
   .info-chip.has-notes {
-    color: var(--accent-blue);
+    color: var(--accent);
   }
 
   .provider-chip {
@@ -368,8 +444,8 @@
 
   .overlay {
     position: fixed; inset: 0;
-    background: rgba(0,0,0,0.3);
-    backdrop-filter: blur(4px);
+    background: rgba(8,6,12,0.65);
+    backdrop-filter: blur(6px);
     display: none;
     align-items: center; justify-content: center;
     z-index: 50;
@@ -383,7 +459,8 @@
     max-width: 500px;
     border-radius: 16px;
     padding: 24px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 24px 48px rgba(0,0,0,0.55);
   }
   .modal h2 { margin: 0 0 6px; font-size: 1.3rem; font-weight: 600; }
   .modal .sub { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; }
@@ -397,13 +474,14 @@
     border: 1px solid var(--border-color);
     border-radius: 8px; font-size: 0.95rem;
     outline: none; background: var(--bg-main);
+    color: var(--text-primary);
     font-family: inherit;
   }
   .field textarea {
     resize: vertical;
     min-height: 100px;
   }
-  .field input:focus, .field textarea:focus { border-color: var(--accent-blue); background: #fff; }
+  .field input:focus, .field textarea:focus { border-color: var(--accent); background: var(--surface-2); }
   .field .help {
     display: block;
     margin-top: 6px;
@@ -417,10 +495,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 0;
   }
   .toolbar {
-    margin-bottom: 14px;
+    margin-bottom: 20px;
   }
 
   .mobile-genre-toggle {
@@ -436,7 +514,12 @@
   }
 
   @media (max-width: 768px) {
-    .brand-bar { padding: 24px 16px 12px; text-align: center; }
+    .brand-bar { padding: 24px 16px 12px; flex-direction: column; align-items: stretch; }
+    .stats { justify-content: space-between; gap: 12px; }
+    .filter-status-row { margin-bottom: 12px; }
+    .filter-group { flex-direction: column; gap: 6px; }
+    .fg-label { flex: none; padding-top: 0; }
+    .filter-clear-row { padding-left: 0; }
     main { padding: 8px 12px 60px; }
     .toolbar { 
       padding: 8px;
@@ -452,16 +535,8 @@
 
     .list-container {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 12px;
-    }
-    .row-card {
-      width: auto;
-      min-width: 0;
-    }
-    .poster-frame {
-      height: auto;
-      aspect-ratio: 2 / 3;
     }
   }
 
@@ -492,9 +567,10 @@
 </head>
 <body>
 
-<div class="brand-bar">
+<header class="brand-bar">
   <h1>FILMOPOLIS</h1>
-</div>
+  <div class="stats" id="stats"></div>
+</header>
 
 <main>
   <div class="toolbar">
@@ -652,46 +728,107 @@ let state = { type:'all', sort:'added-desc' };
 
 const rowsEl = document.getElementById('rows');
 const genrePillsEl = document.getElementById('genrePills');
-const activeFilters = new Set();
+const activeFilters = { status:new Set(), provider:new Set(), genre:new Set(), year:new Set() };
+const expandedGroups = new Set();
+const GROUP_LIMIT = { provider: 8, genre: 10, year: 10 };
 
 function splitGenres(genreStr){
   return (genreStr || '').split(',').map(g => g.trim()).filter(Boolean);
 }
+function activeFilterCount(){
+  return Object.values(activeFilters).reduce((n, set) => n + set.size, 0);
+}
+function countBy(extract){
+  const m = new Map();
+  data.forEach(d => extract(d).forEach(v => m.set(v, (m.get(v) || 0) + 1)));
+  return m;
+}
+function updateFilterToggleLabel(){
+  const btn = document.getElementById('genreToggleBtn');
+  if(!btn) return;
+  const n = activeFilterCount();
+  const open = genrePillsEl.classList.contains('mobile-open');
+  btn.textContent = open ? '✕ Zavrieť filtre' : (n ? '🏷️ Filtre (' + n + ')' : '🏷️ Filtre');
+}
 
 function renderGenrePills(){
-  const allGenres = new Set();
-  const allYears = new Set();
-  const allProviders = new Set();
+  const unwatchedCount = data.filter(d => getCombinedRating(d) == null).length;
+  const groups = [];
+  if(unwatchedCount) groups.push({ key:'status', label:'Stav', items:[['unwatched', 'Nepozreté', unwatchedCount]] });
 
-  data.forEach(d => {
-    splitGenres(d.genre).forEach(g => allGenres.add(g));
-    if(d.year) allYears.add(String(d.year));
-    if(d.providerName) allProviders.add(d.providerName);
-  });
+  const byCount = (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'sk');
+  const providers = [...countBy(d => d.providerName ? [d.providerName] : [])].sort(byCount);
+  const genres = [...countBy(d => splitGenres(d.genre))].sort(byCount);
+  const years = [...countBy(d => d.year ? [String(d.year)] : [])].sort((a, b) => b[0].localeCompare(a[0]));
+  if(providers.length) groups.push({ key:'provider', label:'Služba', items:providers.map(([v, n]) => [v, v, n]) });
+  if(genres.length) groups.push({ key:'genre', label:'Žáner', items:genres.map(([v, n]) => [v, v, n]) });
+  if(years.length) groups.push({ key:'year', label:'Rok', items:years.map(([v, n]) => [v, v, n]) });
 
-  const sortedGenres = Array.from(allGenres).sort((a,b)=>a.localeCompare(b,'sk'));
-  const sortedYears = Array.from(allYears).sort((a,b)=>b.localeCompare(a));
-  const sortedProviders = Array.from(allProviders).sort((a,b)=>a.localeCompare(b,'sk'));
+  const pill = (group, value, label, n) =>
+    `<button type="button" class="genre-pill${activeFilters[group].has(value) ? ' active' : ''}" data-group="${group}" data-value="${escapeHTML(value)}">${escapeHTML(label)}<span class="gp-count">${n}</span></button>`;
 
-  const combinedFilters = [
-    '👁️ Nepozreté',
-    ...sortedProviders.map(p => '📺 ' + p),
-    ...sortedGenres,
-    ...sortedYears
-  ];
+  let html = groups.map(g => {
+    const limit = GROUP_LIMIT[g.key] || Infinity;
+    const expanded = expandedGroups.has(g.key);
+    let visible = g.items;
+    let more = '';
+    if(!expanded && g.items.length > limit){
+      const head = g.items.slice(0, limit);
+      const shown = new Set(head.map(i => i[0]));
+      // aktívne filtre zostanú viditeľné, aj keď sú mimo prvých položiek
+      const pinned = g.items.filter(i => !shown.has(i[0]) && activeFilters[g.key].has(i[0]));
+      visible = head.concat(pinned);
+      more = `<button type="button" class="genre-pill more" data-more="${g.key}">Ďalšie (${g.items.length - visible.length})</button>`;
+    } else if(expanded && g.items.length > limit){
+      more = `<button type="button" class="genre-pill more" data-more="${g.key}">Menej</button>`;
+    }
+    return `<div class="filter-group"><span class="fg-label">${g.label}</span><div class="fg-pills">${visible.map(i => pill(g.key, i[0], i[1], i[2])).join('')}${more}</div></div>`;
+  }).join('');
 
-  if(!combinedFilters.length){ genrePillsEl.innerHTML = ''; return; }
-  
-  genrePillsEl.innerHTML = combinedFilters.map(f =>
-    `<button type="button" class="genre-pill${activeFilters.has(f) ? ' active' : ''}" data-filter="${escapeHTML(f)}">${escapeHTML(f)}</button>`
-  ).join('');
+  const n = activeFilterCount();
+  if(n) html += `<div class="filter-clear-row"><button type="button" class="genre-pill clear" data-clear="1">Zrušiť filtre (${n})</button></div>`;
+  genrePillsEl.innerHTML = html;
+  updateFilterToggleLabel();
 }
 
 genrePillsEl.addEventListener('click', e=>{
-  const btn = e.target.closest('.genre-pill');
+  const more = e.target.closest('[data-more]');
+  if(more){
+    const k = more.dataset.more;
+    if(expandedGroups.has(k)) expandedGroups.delete(k); else expandedGroups.add(k);
+    renderGenrePills();
+    return;
+  }
+  if(e.target.closest('[data-clear]')){
+    Object.values(activeFilters).forEach(set => set.clear());
+    applyFiltersAndRender();
+    return;
+  }
+  const btn = e.target.closest('.genre-pill[data-group]');
   if(!btn) return;
-  const f = btn.dataset.filter;
-  if(activeFilters.has(f)) activeFilters.delete(f); else activeFilters.add(f);
+  const set = activeFilters[btn.dataset.group];
+  const v = btn.dataset.value;
+  if(set.has(v)) set.delete(v); else set.add(v);
+  applyFiltersAndRender();
+});
+
+function renderStats(){
+  const films = data.filter(d => d.type !== 'seriál').length;
+  const series = data.length - films;
+  const rated = data.map(getCombinedRating).filter(v => v != null);
+  const avg = rated.length ? Math.round(rated.reduce((a, b) => a + b, 0) / rated.length) + ' %' : '–';
+  const unwatched = data.length - rated.length;
+  const active = activeFilters.status.has('unwatched');
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><b>${films}</b><span>filmov</span></div>
+    <div class="stat"><b>${series}</b><span>seriálov</span></div>
+    <div class="stat"><b>${avg}</b><span>priemer</span></div>
+    <button type="button" class="stat${active ? ' active' : ''}" id="statUnwatched" title="Zobraziť len nepozreté"><b>${unwatched}</b><span>nepozretých</span></button>`;
+}
+document.getElementById('stats').addEventListener('click', e=>{
+  if(!e.target.closest('#statUnwatched')) return;
+  const set = activeFilters.status;
+  if(set.has('unwatched')) set.delete('unwatched'); else set.add('unwatched');
   applyFiltersAndRender();
 });
 
@@ -722,10 +859,11 @@ function rowHTML(item){
     ? `<img src="${hqPoster}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'">`
     : `<div class="poster-placeholder">${escapeHTML(item.title)}</div>`;
     
+  const typeBadge = item.type === 'seriál' ? '<span class="type-badge">Seriál</span>' : '';
   const tmdbUrl = item.tmdbId ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
   const posterHTML = tmdbUrl
-    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}${unwatchedOverlay}</a>`
-    : `<div class="poster-frame" title="${escapeHTML(item.title)}">${posterInner}${unwatchedOverlay}</div>`;
+    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}${unwatchedOverlay}${typeBadge}</a>`
+    : `<div class="poster-frame" title="${escapeHTML(item.title)}">${posterInner}${unwatchedOverlay}${typeBadge}</div>`;
 
   const ratingText = combined != null ? combined + '%' : '?';
   const ratingTitleText = combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie';
@@ -771,21 +909,18 @@ function rowHTML(item){
 
 function applyFiltersAndRender(){
   renderGenrePills();
+  renderStats();
   let list = data.slice();
   if(state.type !== 'all') list = list.filter(d => d.type === state.type);
   
-  if(activeFilters.size > 0){
+  if(activeFilterCount() > 0){
     list = list.filter(d => {
-      const itemGenres = splitGenres(d.genre);
-      const itemYear = d.year ? String(d.year) : '';
-      const itemProvider = d.providerName ? '📺 ' + d.providerName : '';
-      const isUnwatched = getCombinedRating(d) == null;
-
-      return Array.from(activeFilters).some(f => {
-        if(f === '👁️ Nepozreté') return isUnwatched;
-        if(f.startsWith('📺 ')) return itemProvider === f;
-        return itemGenres.includes(f) || itemYear === f;
-      });
+      const f = activeFilters;
+      if(f.status.size && getCombinedRating(d) != null) return false;
+      if(f.provider.size && !f.provider.has(d.providerName)) return false;
+      if(f.genre.size && !splitGenres(d.genre).some(g => f.genre.has(g))) return false;
+      if(f.year.size && !f.year.has(d.year ? String(d.year) : '')) return false;
+      return true;
     });
   }
 
@@ -1008,7 +1143,7 @@ const genreToggleBtn = document.getElementById('genreToggleBtn');
 if(genreToggleBtn){
   genreToggleBtn.addEventListener('click', ()=>{
     genrePillsEl.classList.toggle('mobile-open');
-    genreToggleBtn.textContent = genrePillsEl.classList.contains('mobile-open') ? '✕ Zavrieť filtre' : '🏷️ Filtre';
+    updateFilterToggleLabel();
   });
 }
 
