@@ -316,7 +316,9 @@
     user-select: none;
     touch-action: manipulation;
     min-width: 0;
+    cursor: pointer;
   }
+  .row-card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .row-card:hover {
     border-color: var(--border-strong);
     box-shadow: 0 14px 30px rgba(0,0,0,0.45);
@@ -334,7 +336,6 @@
     position: relative;
     transition: opacity .15s;
   }
-  a.poster-frame:hover { opacity: 0.88; }
   .poster-thumb {
     width: 100%;
     height: 100%;
@@ -393,13 +394,6 @@
     padding: 0 5px;
   }
 
-  .rating-chip {
-    background: transparent;
-    color: var(--text-primary);
-    gap: 3px;
-    padding: 0 2px;
-  }
-  .rating-chip:hover { background: var(--surface-2); }
   .rating-star {
     color: var(--star);
     font-size: 0.85rem;
@@ -563,6 +557,151 @@
     text-overflow: ellipsis;
     margin-bottom: 0px;
   }
+
+  .rating-badge {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 5px;
+    padding: 4px 11px 4px 9px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--text-primary);
+    background: rgba(22, 20, 29, 0.82);
+    backdrop-filter: blur(6px);
+    border-radius: 999px;
+    pointer-events: none;
+  }
+  .rating-badge .rating-star { font-size: 0.95rem; }
+  .rating-badge small { font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); margin-left: -2px; }
+
+  .detail {
+    position: relative;
+    width: 100%;
+    max-width: 640px;
+    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    box-shadow: 0 24px 56px rgba(0,0,0,0.6);
+  }
+  .detail-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .detail-close:hover { color: var(--text-primary); }
+  .detail-head {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 20px;
+    padding: 24px 24px 0;
+  }
+  .detail-poster {
+    aspect-ratio: 2 / 3;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--surface-2);
+  }
+  .detail-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .detail-poster .poster-placeholder { font-size: 0.7rem; }
+  .detail-info { min-width: 0; padding-right: 36px; }
+  .detail-info h2 {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  .detail-original { margin-top: 2px; font-size: 0.85rem; color: var(--text-secondary); }
+  .detail-sub { margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary); }
+  .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .detail-tags span {
+    font-size: 0.72rem;
+    font-weight: 500;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--surface-2);
+    color: var(--text-primary);
+  }
+  .detail-facts { margin: 14px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 0.84rem; }
+  .detail-facts dt { color: var(--text-secondary); }
+  .detail-facts dd { margin: 0; min-width: 0; }
+  .detail-facts dd img { height: 18px; width: 18px; border-radius: 4px; vertical-align: -4px; margin-right: 6px; }
+  .detail-facts a { color: var(--accent); text-decoration: none; }
+  .detail-facts a:hover { text-decoration: underline; }
+  .detail-summary { margin: 16px 24px 0; font-size: 0.88rem; line-height: 1.55; color: var(--text-secondary); }
+  .detail-section { padding: 22px 24px 0; }
+  .detail-section h3 { margin: 0 0 10px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+  .rating-editor { display: flex; align-items: center; gap: 16px; }
+  .rating-value {
+    flex: 0 0 auto;
+    min-width: 92px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .rating-value.empty { font-size: 1rem; font-weight: 600; color: var(--text-secondary); }
+  .rating-value .rating-star { font-size: 1.4rem; margin-right: 4px; }
+  .rating-editor input[type=range] { flex: 1 1 auto; min-width: 0; accent-color: var(--accent); height: 28px; }
+  .detail-section textarea {
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: var(--bg-main);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.92rem;
+    outline: none;
+  }
+  .detail-section textarea:focus { border-color: var(--accent); background: var(--surface-2); }
+  .detail-actions {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 22px;
+    padding: 14px 24px;
+    background: var(--card-bg);
+    border-top: 1px solid var(--border-color);
+  }
+  .detail-actions .spacer { flex: 1; }
+  .btn.btn-quiet-danger { background: transparent; color: #ff6b61; }
+  .btn.btn-quiet-danger:hover { background: rgba(255, 59, 48, 0.14); }
+
+  @media (max-width: 768px) {
+    .detail-overlay { align-items: flex-end; padding: 0; }
+    .detail { max-width: none; max-height: 92vh; max-height: 92dvh; border-radius: 20px 20px 0 0; border-bottom: 0; }
+    .detail-head { grid-template-columns: 108px 1fr; gap: 14px; padding: 20px 16px 0; }
+    .detail-info h2 { font-size: 1.3rem; }
+    .detail-summary { margin: 14px 16px 0; }
+    .detail-section { padding: 18px 16px 0; }
+    .detail-actions { padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
+    .rating-value { min-width: 78px; font-size: 1.7rem; }
+  }
 </style>
 </head>
 <body>
@@ -604,42 +743,41 @@
   <div class="list-container" id="rows"></div>
 </main>
 
-<!-- Rating modal -->
-<div class="overlay" id="ratingOverlay">
-  <div class="modal">
-    <h2 id="ratingTitle">Spoločné hodnotenie</h2>
-    <p class="sub">Jedno spoločné hodnotenie titulu</p>
-    <form id="ratingForm">
-      <input type="hidden" id="ratingId">
-      <div class="field">
-        <label for="f-rating">Hodnotenie v %</label>
-        <input type="number" id="f-rating" min="0" max="100" step="1" inputmode="numeric" placeholder="Napr. 85">
-        <span class="help">Zadaj číslo od 0 do 100. Prázdne pole hodnotenie odstráni.</span>
+<!-- Detail modal -->
+<div class="overlay detail-overlay" id="detailOverlay">
+  <div class="detail" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <button type="button" class="detail-close" id="detailClose" aria-label="Zavrieť">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="18" y1="6" x2="6" y2="18"></line></svg>
+    </button>
+    <div class="detail-head">
+      <div class="detail-poster" id="detailPoster"></div>
+      <div class="detail-info">
+        <h2 id="detailTitle"></h2>
+        <div class="detail-original" id="detailOriginal"></div>
+        <div class="detail-sub" id="detailSub"></div>
+        <div class="detail-tags" id="detailTags"></div>
+        <dl class="detail-facts" id="detailFacts"></dl>
       </div>
-      <div class="modal-actions">
-        <button type="button" class="btn" id="ratingCancel">Zrušiť</button>
-        <button type="submit" class="btn btn-large-add">Uložiť hodnotenie</button>
+    </div>
+    <p class="detail-summary" id="detailSummary"></p>
+    <div class="detail-section">
+      <h3>Moje hodnotenie</h3>
+      <div class="rating-editor">
+        <div class="rating-value" id="detailRatingValue"></div>
+        <input type="range" id="detailRating" min="0" max="100" step="1" aria-label="Hodnotenie v percentách">
+        <button type="button" class="btn ghost" id="detailRatingClear">Bez hodnotenia</button>
       </div>
-    </form>
-  </div>
-</div>
-
-<!-- Notes modal -->
-<div class="overlay" id="notesOverlay">
-  <div class="modal">
-    <h2 id="notesTitle">Osobné poznámky</h2>
-    <p class="sub">Poznámky, dojmy a zaujímavosti k titulu</p>
-    <form id="notesForm">
-      <input type="hidden" id="notesId">
-      <div class="field">
-        <label for="f-notes">Moje dojmy a poznámky</label>
-        <textarea id="f-notes" placeholder="Napr. Skvelá hudba, bavil ma záver..."></textarea>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn" id="notesCancel">Zrušiť</button>
-        <button type="submit" class="btn btn-large-add">Uložiť poznámku</button>
-      </div>
-    </form>
+    </div>
+    <div class="detail-section">
+      <h3><label for="detailNotes">Moje poznámky</label></h3>
+      <textarea id="detailNotes" placeholder="Napr. Skvelá hudba, bavil ma záver…"></textarea>
+    </div>
+    <div class="detail-actions">
+      <button type="button" class="btn btn-quiet-danger" id="detailDelete">Vymazať titul</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="detailCancel">Zrušiť</button>
+      <button type="button" class="btn btn-large-add" id="detailSave">Uložiť</button>
+    </div>
   </div>
 </div>
 
@@ -860,24 +998,15 @@ function rowHTML(item){
     : `<div class="poster-placeholder">${escapeHTML(item.title)}</div>`;
     
   const typeBadge = item.type === 'seriál' ? '<span class="type-badge">Seriál</span>' : '';
-  const tmdbUrl = item.tmdbId ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
-  const posterHTML = tmdbUrl
-    ? `<a class="poster-frame" href="${tmdbUrl}" target="_blank" rel="noopener" title="${escapeHTML(item.title)} — otvoriť na TMDb">${posterInner}${unwatchedOverlay}${typeBadge}</a>`
-    : `<div class="poster-frame" title="${escapeHTML(item.title)}">${posterInner}${unwatchedOverlay}${typeBadge}</div>`;
-
-  const ratingText = combined != null ? combined + '%' : '?';
-  const ratingTitleText = combined != null ? 'Upraviť hodnotenie' : 'Pridať hodnotenie';
-  const ratingChip = `<button class="icon-chip rating-chip" data-rate="${item.id}" title="${ratingTitleText}"><span class="rating-star">★</span> <span>${ratingText}</span></button>`;
+  const ratingBadge = combined != null
+    ? `<span class="rating-badge"><span class="rating-star">★</span>${combined}<small>%</small></span>`
+    : '';
+  const posterHTML = `<div class="poster-frame">${posterInner}${unwatchedOverlay}${typeBadge}${ratingBadge}</div>`;
 
   const hasNotes = item.notes && item.notes.trim().length > 0;
-  const notesTitleText = hasNotes ? 'Upraviť poznámky' : 'Pridať poznámku';
-  const infoChip = `<button class="icon-chip info-chip${hasNotes ? ' has-notes' : ''}" data-notes="${item.id}" title="${notesTitleText}">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="12" y1="16" x2="12" y2="12"></line>
-      <line x1="12" y1="8" x2="12.01" y2="8"></line>
-    </svg>
-  </button>`;
+  const infoChip = hasNotes
+    ? `<span class="icon-chip info-chip has-notes" title="Má poznámky"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="14 3 14 9 20 9"></polyline><line x1="8" y1="14" x2="16" y2="14"></line><line x1="8" y1="18" x2="13" y2="18"></line></svg></span>`
+    : '<span></span>';
 
   const providerChip = hqLogo
     ? `<span class="icon-chip provider-chip" title="${escapeHTML(item.providerName || 'Dostupné na')}"><img src="${hqLogo}" alt="${escapeHTML(item.providerName || '')}"></span>`
@@ -893,14 +1022,13 @@ function rowHTML(item){
   const metaLabel = metaString ? `<div class="card-meta">${escapeHTML(metaString)}</div>` : '';
 
   return `
-  <div class="row-card" data-id="${item.id}">
+  <div class="row-card" data-id="${item.id}" tabindex="0" role="button" aria-label="Detail: ${escapeHTML(item.title)}">
     ${posterHTML}
     <div class="card-info">
       <div class="card-title" title="${escapeHTML(item.title)}">${escapeHTML(item.title)}</div>
       ${metaLabel}
     </div>
     <div class="icon-row">
-      ${ratingChip}
       ${infoChip}
       ${providerChip}
     </div>
@@ -946,16 +1074,15 @@ document.getElementById('typeToggle').addEventListener('click', e=>{
   applyFiltersAndRender();
 });
 rowsEl.addEventListener('click', e=>{
-  const rate = e.target.closest('[data-rate]');
-  if(rate){
-    openRatingModal(Number(rate.dataset.rate));
-    return;
-  }
-  const notes = e.target.closest('[data-notes]');
-  if(notes){
-    openNotesModal(Number(notes.dataset.notes));
-    return;
-  }
+  const card = e.target.closest('.row-card');
+  if(card) openDetail(Number(card.dataset.id));
+});
+rowsEl.addEventListener('keydown', e=>{
+  if(e.key !== 'Enter' && e.key !== ' ') return;
+  const card = e.target.closest('.row-card');
+  if(!card) return;
+  e.preventDefault();
+  openDetail(Number(card.dataset.id));
 });
 
 async function performDelete(id){
@@ -1026,72 +1153,108 @@ rowsEl.addEventListener('click', e=>{
   }
 }, true);
 
-const ratingOverlay = document.getElementById('ratingOverlay');
-const ratingInput = document.getElementById('f-rating');
-function openRatingModal(id){
-  const item = data.find(d => d.id === id);
-  if(!item) return;
-  document.getElementById('ratingId').value = id;
-  document.getElementById('ratingTitle').textContent = item.title;
-  ratingInput.value = getCombinedRating(item) ?? '';
-  ratingOverlay.classList.add('open');
-  setTimeout(()=>ratingInput.focus(), 0);
-}
-function closeRatingModal(){ ratingOverlay.classList.remove('open'); }
-document.getElementById('ratingCancel').addEventListener('click', closeRatingModal);
-ratingOverlay.addEventListener('click', e=>{ if(e.target === ratingOverlay) closeRatingModal(); });
-document.getElementById('ratingForm').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const item = data.find(d => d.id === Number(document.getElementById('ratingId').value));
-  if(!item) return;
-  const raw = ratingInput.value.trim();
-  if(raw !== '' && (Number(raw) < 0 || Number(raw) > 100)) return;
-  const newRating = raw === '' ? null : Math.round(Number(raw));
-  const prevRating = item.rating;
-  item.rating = newRating;
-  applyFiltersAndRender();
-  closeRatingModal();
-  try{
-    await apiPatch({ id: item.id, rating: newRating, milan: null, basa: null });
-  }catch(err){
-    console.error('Uloženie hodnotenia zlyhalo:', err);
-    item.rating = prevRating;
-    applyFiltersAndRender();
-    alert('Uloženie hodnotenia sa nepodarilo — skontroluj pripojenie.');
-  }
-});
+/* Detail titulu: hodnotenie, poznámky, informácie a mazanie na jednom mieste */
+const detailOverlay = document.getElementById('detailOverlay');
+const detailRating = document.getElementById('detailRating');
+const detailRatingValue = document.getElementById('detailRatingValue');
+const detailNotes = document.getElementById('detailNotes');
+let detailItem = null;
+let detailDraftRating = null;
 
-/* Modálne okno pre osobné poznámky */
-const notesOverlay = document.getElementById('notesOverlay');
-const notesInput = document.getElementById('f-notes');
-function openNotesModal(id){
+function renderDetailRating(){
+  if(detailDraftRating == null){
+    detailRatingValue.className = 'rating-value empty';
+    detailRatingValue.textContent = 'Bez hodnotenia';
+    detailRating.value = 50;
+  } else {
+    detailRatingValue.className = 'rating-value';
+    detailRatingValue.innerHTML = '<span class="rating-star">★</span>' + detailDraftRating + ' %';
+    detailRating.value = detailDraftRating;
+  }
+  document.getElementById('detailRatingClear').style.visibility = detailDraftRating == null ? 'hidden' : 'visible';
+}
+
+function openDetail(id){
   const item = data.find(d => d.id === id);
   if(!item) return;
-  document.getElementById('notesId').value = id;
-  document.getElementById('notesTitle').textContent = item.title;
-  notesInput.value = item.notes || '';
-  notesOverlay.classList.add('open');
-  setTimeout(()=>notesInput.focus(), 0);
+  detailItem = item;
+  detailDraftRating = getCombinedRating(item);
+
+  const poster = item.poster ? item.poster.replace(/\/w(92|154|185)\//, '/w500/') : '';
+  document.getElementById('detailPoster').innerHTML = poster
+    ? `<img src="${poster}" alt="Plagát: ${escapeHTML(item.title)}" onerror="this.parentElement.innerHTML='<div class=&quot;poster-placeholder&quot;>Bez náhľadu</div>'">`
+    : `<div class="poster-placeholder">${escapeHTML(item.title)}</div>`;
+
+  document.getElementById('detailTitle').textContent = item.title;
+  const orig = document.getElementById('detailOriginal');
+  orig.textContent = item.original && item.original !== item.title ? item.original : '';
+  orig.style.display = orig.textContent ? '' : 'none';
+  document.getElementById('detailSub').textContent = [item.year, item.type === 'seriál' ? 'Seriál' : 'Film'].filter(Boolean).join(', ');
+  document.getElementById('detailTags').innerHTML = splitGenres(item.genre).map(g => `<span>${escapeHTML(g)}</span>`).join('');
+
+  const logo = item.providerLogo ? item.providerLogo.replace(/\/w(45|92)\//, '/w154/') : '';
+  const tmdbUrl = item.tmdbId ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
+  const facts = [];
+  if(item.director) facts.push(['Réžia', escapeHTML(item.director)]);
+  if(item.actors) facts.push(['Hrajú', escapeHTML(item.actors)]);
+  if(item.public != null) facts.push(['TMDb', escapeHTML(String(item.public)) + ' %']);
+  if(item.providerName) facts.push(['Pozrieť na', (logo ? `<img src="${logo}" alt="">` : '') + escapeHTML(item.providerName)]);
+  if(tmdbUrl) facts.push(['Odkaz', `<a href="${tmdbUrl}" target="_blank" rel="noopener">Otvoriť na TMDb</a>`]);
+  document.getElementById('detailFacts').innerHTML = facts.map(f => `<dt>${f[0]}</dt><dd>${f[1]}</dd>`).join('');
+
+  const summary = document.getElementById('detailSummary');
+  summary.textContent = item.summary || '';
+  summary.style.display = item.summary ? '' : 'none';
+
+  detailNotes.value = item.notes || '';
+  renderDetailRating();
+  detailOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  detailOverlay.querySelector('.detail').scrollTop = 0;
 }
-function closeNotesModal(){ notesOverlay.classList.remove('open'); }
-document.getElementById('notesCancel').addEventListener('click', closeNotesModal);
-notesOverlay.addEventListener('click', e=>{ if(e.target === notesOverlay) closeNotesModal(); });
-document.getElementById('notesForm').addEventListener('submit', async e=>{
-  e.preventDefault();
-  const item = data.find(d => d.id === Number(document.getElementById('notesId').value));
+
+function detailIsDirty(){
+  if(!detailItem) return false;
+  return detailDraftRating !== getCombinedRating(detailItem) || detailNotes.value.trim() !== (detailItem.notes || '').trim();
+}
+function closeDetail(force){
+  if(!force && detailIsDirty() && !confirm('Zahodiť neuložené zmeny?')) return;
+  detailOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+  detailItem = null;
+}
+
+detailRating.addEventListener('input', ()=>{ detailDraftRating = Number(detailRating.value); renderDetailRating(); });
+document.getElementById('detailRatingClear').addEventListener('click', ()=>{ detailDraftRating = null; renderDetailRating(); });
+document.getElementById('detailClose').addEventListener('click', ()=> closeDetail());
+document.getElementById('detailCancel').addEventListener('click', ()=> closeDetail());
+detailOverlay.addEventListener('click', e=>{ if(e.target === detailOverlay) closeDetail(); });
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape' && detailOverlay.classList.contains('open')) closeDetail();
+});
+document.getElementById('detailDelete').addEventListener('click', ()=>{
+  const id = detailItem && detailItem.id;
+  closeDetail(true);
+  if(id != null) openDeleteConfirm(id);
+});
+document.getElementById('detailSave').addEventListener('click', async ()=>{
+  const item = detailItem;
   if(!item) return;
-  const newNotes = notesInput.value.trim();
-  const prevNotes = item.notes;
+  const newRating = detailDraftRating;
+  const newNotes = detailNotes.value.trim();
+  const prev = { rating: item.rating, notes: item.notes };
+  item.rating = newRating;
   item.notes = newNotes;
+  closeDetail(true);
   applyFiltersAndRender();
-  closeNotesModal();
   try{
-    await apiPatch({ id: item.id, notes: newNotes });
+    await apiPatch({ id: item.id, rating: newRating, milan: null, basa: null, notes: newNotes });
   }catch(err){
-    console.error('Uloženie poznámky zlyhalo:', err);
-    item.notes = prevNotes;
+    console.error('Uloženie zlyhalo:', err);
+    item.rating = prev.rating;
+    item.notes = prev.notes;
     applyFiltersAndRender();
-    alert('Uloženie poznámky sa nepodarilo — skontroluj pripojenie.');
+    alert('Uloženie sa nepodarilo — skontroluj pripojenie.');
   }
 });
 
