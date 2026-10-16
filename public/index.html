@@ -565,26 +565,21 @@
     margin-bottom: 0px;
   }
 
-  .rating-badge {
-    position: absolute;
-    left: 10px;
-    bottom: 10px;
+  .row-left { display: flex; align-items: center; gap: 10px; min-width: 0; padding-left: 4px; }
+  .rating-inline {
     display: inline-flex;
     align-items: baseline;
     gap: 5px;
-    padding: 5px 14px 5px 11px;
     font-family: 'Outfit', sans-serif;
-    font-size: 1.7rem;
+    font-size: 1.5rem;
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
     color: var(--text-primary);
-    background: rgba(22, 20, 29, 0.82);
-    backdrop-filter: blur(6px);
-    border-radius: 999px;
-    pointer-events: none;
+    white-space: nowrap;
   }
-  .rating-badge .rating-star { font-size: 1.3rem; }
-  .rating-badge small { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); margin-left: -2px; }
+  .rating-inline .rating-star { font-size: 1.2rem; }
+  .rating-inline small { font-size: 0.9rem; font-weight: 600; color: var(--text-secondary); margin-left: -1px; }
 
   .detail {
     position: relative;
