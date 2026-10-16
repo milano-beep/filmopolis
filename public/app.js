@@ -231,10 +231,10 @@ function rowHTML(item){
     ? `<img src="${escapeHTML(hqPoster)}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" data-fallback="1">`
     : `<div class="poster-placeholder">${escapeHTML(item.title)}</div>`;
     
-  const ratingBadge = combined != null
-    ? `<span class="rating-badge"><span class="rating-star">★</span>${combined}<small>%</small></span>`
+  const ratingInline = combined != null
+    ? `<span class="rating-inline" title="Moje hodnotenie"><span class="rating-star">★</span>${combined}<small>%</small></span>`
     : '';
-  const posterHTML = `<div class="poster-frame">${posterInner}${unwatchedOverlay}${ratingBadge}</div>`;
+  const posterHTML = `<div class="poster-frame">${posterInner}${unwatchedOverlay}</div>`;
 
   const hasNotes = item.notes && item.notes.trim().length > 0;
   const infoChip = hasNotes
@@ -262,7 +262,7 @@ function rowHTML(item){
       ${metaLabel}
     </div>
     <div class="icon-row">
-      ${infoChip}
+      <div class="row-left">${ratingInline}${infoChip}</div>
       ${providerChip}
     </div>
   </div>`;
