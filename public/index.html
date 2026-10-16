@@ -242,6 +242,9 @@
   .detail.readonly .notes-section,
   .detail.readonly .detail-actions { display: none; }
   .detail.readonly { padding-bottom: 24px; }
+  .detail-locked { display: none; align-items: center; justify-content: space-between; gap: 14px; margin-top: 14px; padding: 12px 14px; border: 1px dashed var(--border-strong); border-radius: 12px; font-size: 0.85rem; color: var(--text-secondary); }
+  .detail.readonly .detail-locked { display: flex; }
+  @media (max-width: 768px) { .detail-locked { flex-direction: column; align-items: stretch; text-align: center; } }
   #search[readonly] { cursor: pointer; }
   .stats { display: flex; gap: 30px; }
   .stat {
@@ -759,6 +762,10 @@
         <div class="rating-value" id="detailRatingValue"></div>
         <input type="range" id="detailRating" min="0" max="100" step="1" aria-label="Hodnotenie v percentách">
         <button type="button" class="btn ghost" id="detailRatingClear">Bez hodnotenia</button>
+      </div>
+      <div class="detail-locked">
+        <span>Na hodnotenie a poznámky najprv odomkni úpravy.</span>
+        <button type="button" class="btn btn-large-add" id="detailUnlock">Odomknúť</button>
       </div>
     </div>
     <div class="detail-section notes-section">

@@ -452,6 +452,16 @@ function closeDetail(force){
 }
 
 detailRating.addEventListener('input', ()=>{ detailDraftRating = Number(detailRating.value); renderDetailRating(); });
+// klik/Enter na posuvník bez posunu (napr. presne 50 %) tiež nastaví hodnotenie
+['pointerup','keyup'].forEach(ev => detailRating.addEventListener(ev, ()=>{
+  if(detailDraftRating == null){ detailDraftRating = Number(detailRating.value); renderDetailRating(); }
+}));
+let reopenAfterUnlock = null;
+document.getElementById('detailUnlock').addEventListener('click', ()=>{
+  reopenAfterUnlock = detailItem ? detailItem.id : null;
+  closeDetail(true);
+  openSettings('Na hodnotenie a poznámky najprv odomkni úpravy.');
+});
 document.getElementById('detailRatingClear').addEventListener('click', ()=>{ detailDraftRating = null; renderDetailRating(); });
 document.getElementById('detailClose').addEventListener('click', ()=> closeDetail());
 document.getElementById('detailCancel').addEventListener('click', ()=> closeDetail());
@@ -550,7 +560,7 @@ function promptForToken(msg){
   if(settingsOverlay.classList.contains('open') && msg === settingsMsg.textContent) return;
   openSettings(msg);
 }
-function closeSettings(){ settingsOverlay.classList.remove('open'); }
+function closeSettings(){ settingsOverlay.classList.remove('open'); reopenAfterUnlock = null; }
 
 lockBtn.addEventListener('click', ()=> openSettings());
 searchInput.addEventListener('focus', ()=>{ if(!unlocked) openSettings('Na pridávanie titulov najprv odomkni úpravy.'); });
@@ -575,8 +585,10 @@ document.getElementById('settingsForm').addEventListener('submit', async e=>{
     setToken(v);
     unlocked = true;
     applyLockUI();
+    const pendingId = reopenAfterUnlock;
     closeSettings();
     try{ data = await apiGetAll(); applyFiltersAndRender(); }catch(err){ console.error(err); }
+    if(pendingId != null) openDetail(pendingId);   // vráť sa k titulu, ktorý si chcel hodnotiť
   }catch(err){
     tokenError.textContent = 'Nepodarilo sa overiť. Skontroluj pripojenie.';
   }finally{ btn.disabled = false; }
