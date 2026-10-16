@@ -219,6 +219,14 @@ function rowHTML(item){
   const hqLogo = safeImg(item.providerLogo).replace(/\/w(45|92)\//, '/w154/');
 
   const unwatched = combined == null;
+  const unwatchedOverlay = combined == null 
+    ? `<div class="poster-overlay-unwatched" title="Ešte nebolo dopozerané (bez hodnotenia)">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+          <line x1="1" y1="1" x2="23" y2="23"></line>
+        </svg>
+       </div>`
+    : '';
 
   const posterInner = hqPoster
     ? `<img src="${escapeHTML(hqPoster)}" alt="Plagát: ${escapeHTML(item.title)}" class="poster-thumb" data-fallback="1">`
@@ -227,7 +235,7 @@ function rowHTML(item){
   const ratingInline = combined != null
     ? `<span class="rating-inline" title="Moje hodnotenie"><span class="rating-star">★</span>${combined}<small>%</small></span>`
     : '';
-  const posterHTML = `<div class="poster-frame">${posterInner}</div>`;
+  const posterHTML = `<div class="poster-frame">${posterInner}${unwatchedOverlay}</div>`;
 
   const hasNotes = item.notes && item.notes.trim().length > 0;
   const infoChip = hasNotes
