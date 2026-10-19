@@ -1,29 +1,23 @@
 const API_URL = '/api/films';
-const TOKEN_STORAGE = 'filmopolis-token';
-let unlocked = false;   // true až keď server overí prístupový kód
-
-function getToken(){ try{ return localStorage.getItem(TOKEN_STORAGE) || ''; }catch(e){ return ''; } }
-function setToken(t){
-  try{ if(t) localStorage.setItem(TOKEN_STORAGE, t); else localStorage.removeItem(TOKEN_STORAGE); }catch(e){}
-}
-// starý TMDb kľúč v prehliadači už nie je potrebný
+const LEGACY_TOKEN_KEY = 'filmopolis-token';
+let unlocked = false;   // true, keď server overí prihlásenie (HttpOnly cookie)
+// staré kľúče v prehliadači už nie sú potrebné
 try{ localStorage.removeItem('filmopolis-tmdb-key'); }catch(e){}
 
 // Bezpečnosť: povoľ len obrázky z TMDb; všetko, čo ide do HTML, sa ošetruje cez escapeHTML.
 function safeImg(u){ return typeof u === 'string' && /^https:\/\/image\.tmdb\.org\//.test(u) ? u : ''; }
 
-// fetch s prístupovým kľúčom; pri 401 otvorí nastavenia a vyžiada kľúč
+// fetch na API; prihlásenie ide cez cookie. Pri 401 sa appka zamkne a vyžiada kód.
 async function authFetch(url, opts = {}, silent = false){
-  const headers = Object.assign({}, opts.headers || {});
-  const t = getToken();
-  if(t) headers.Authorization = 'Bearer ' + t;
-  const res = await fetch(url, Object.assign({}, opts, { headers }));
+  const res = await fetch(url, opts);
   if(res.status === 401 || res.status === 503){
     let msg = '';
     try{ msg = (await res.clone().json()).error || ''; }catch(e){}
     if(res.status === 401){
-      if(t){ setToken(''); unlocked = false; applyLockUI(); }
-      if(!silent) promptForToken(t ? 'Kód už nie je platný. Zadaj ho znova.' : 'Na úpravy zbierky odomkni appku prístupovým kódom.');
+      const wasUnlocked = unlocked;
+      unlocked = false;
+      applyLockUI();
+      if(!silent) promptForToken(wasUnlocked ? 'Prihlásenie vypršalo. Zadaj kód znova.' : 'Na úpravy zbierky odomkni appku prístupovým kódom.');
     }
     const err = new Error(msg || ('API ' + res.status));
     err.status = res.status;
@@ -522,21 +516,29 @@ function applyLockUI(){
   if(!unlocked) resetMainSuggest();
 }
 
-async function checkToken(token){
-  const res = await fetch('/api/auth-check', { headers: { Authorization: 'Bearer ' + token } });
+async function loginWithPassword(password){
+  const res = await fetch('/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password })
+  });
   let msg = '';
   if(!res.ok){ try{ msg = (await res.json()).error || ''; }catch(e){} }
   return { ok: res.ok, status: res.status, msg };
 }
-// Pri načítaní: platnosť uloženého kódu over na serveri (pri výpadku siete ho ponechaj).
+// Pri načítaní sa platnosť prihlásenia overí na serveri (cookie ostáva v prehliadači aj po zatvorení).
 async function restoreLock(){
-  const t = getToken();
-  if(!t){ unlocked = false; return; }
+  // jednorazová migrácia: starý kód z localStorage sa vymení za prihlásenie cez cookie
+  let legacy = '';
+  try{ legacy = localStorage.getItem(LEGACY_TOKEN_KEY) || ''; localStorage.removeItem(LEGACY_TOKEN_KEY); }catch(e){}
   try{
-    const r = await checkToken(t);
-    if(r.ok) unlocked = true;
-    else { unlocked = false; if(r.status === 401) setToken(''); }
-  }catch(e){ unlocked = true; }
+    let r = await fetch('/api/auth-check', { cache: 'no-store' });
+    if(r.status === 401 && legacy){
+      const l = await loginWithPassword(legacy);
+      if(l.ok) r = await fetch('/api/auth-check', { cache: 'no-store' });
+    }
+    unlocked = r.ok;
+  }catch(e){ unlocked = false; }
 }
 
 async function refreshTraktStatus(){
@@ -584,13 +586,12 @@ document.getElementById('settingsForm').addEventListener('submit', async e=>{
   btn.disabled = true;
   tokenError.textContent = '';
   try{
-    const r = await checkToken(v);
+    const r = await loginWithPassword(v);
     if(!r.ok){
       tokenError.textContent = r.status === 401 ? 'Kód nie je správny.' : (r.msg || 'Overenie zlyhalo.');
       tokenInput.select();
       return;
     }
-    setToken(v);
     unlocked = true;
     applyLockUI();
     const pendingId = reopenAfterUnlock;
@@ -603,7 +604,7 @@ document.getElementById('settingsForm').addEventListener('submit', async e=>{
 });
 
 document.getElementById('settingsLock').addEventListener('click', async ()=>{
-  setToken('');
+  try{ await fetch('/api/logout', { method: 'POST' }); }catch(e){}
   unlocked = false;
   applyLockUI();
   closeSettings();
