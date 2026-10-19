@@ -48,10 +48,38 @@ async function safeEqual(a, b) {
   return diff === 0;
 }
 
+// Prihlásenie: buď hlavička "Authorization: Bearer <ADMIN_TOKEN>" (curl, skripty),
+// alebo podpísaný HttpOnly cookie, ktorý vydá /api/login (appka v prehliadači).
+const SESSION_COOKIE = "fs";
+const SESSION_MAX_AGE = 365 * 24 * 60 * 60; // 1 rok
+
+function getCookie(request, name) {
+  const part = (request.headers.get("Cookie") || "").split(/;\s*/).find((c) => c.startsWith(name + "="));
+  return part ? part.slice(name.length + 1) : "";
+}
+
+async function makeSession(env) {
+  const exp = String(Date.now() + SESSION_MAX_AGE * 1000);
+  return `${exp}.${await hmacHex("session:" + exp, env.ADMIN_TOKEN)}`;
+}
+
+// Zmena ADMIN_TOKEN automaticky zneplatní všetky staré prihlásenia.
+async function checkSession(value, env) {
+  if (!env.ADMIN_TOKEN || !value) return false;
+  const [exp, sig] = value.split(".");
+  if (!sig || !(Number(exp) > Date.now())) return false;
+  return safeEqual(sig, await hmacHex("session:" + exp, env.ADMIN_TOKEN));
+}
+
+function sessionCookie(value, maxAge) {
+  return `${SESSION_COOKIE}=${value}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Strict`;
+}
+
 async function isAdmin(request, env) {
   if (!env.ADMIN_TOKEN) return false;
   const m = (request.headers.get("Authorization") || "").match(/^Bearer (.+)$/);
-  return !!m && (await safeEqual(m[1], env.ADMIN_TOKEN));
+  if (m && (await safeEqual(m[1], env.ADMIN_TOKEN))) return true;
+  return checkSession(getCookie(request, SESSION_COOKIE), env);
 }
 
 // Vráti Response, ak prístup nie je povolený, inak null.
@@ -85,6 +113,27 @@ async function checkOAuthState(state, env) {
   const age = Date.now() - Number(ts);
   if (!sig || !(age >= 0 && age < 10 * 60 * 1000)) return false;
   return safeEqual(sig, await hmacHex("trakt:" + ts, env.ADMIN_TOKEN));
+}
+
+async function handleLogin(request, env) {
+  if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
+  if (!env.ADMIN_TOKEN) return json({ error: "Na serveri nie je nastavený ADMIN_TOKEN." }, 503);
+  const body = await readJson(request);
+  if (body.error) return body.error;
+  const password = body.value && typeof body.value.password === "string" ? body.value.password : "";
+  if (!password || !(await safeEqual(password, env.ADMIN_TOKEN))) {
+    await new Promise((r) => setTimeout(r, 600)); // spomalí automatické skúšanie hesiel
+    return json({ error: "Kód nie je správny." }, 401);
+  }
+  const res = json({ ok: true });
+  res.headers.append("Set-Cookie", sessionCookie(await makeSession(env), SESSION_MAX_AGE));
+  return res;
+}
+
+function handleLogout() {
+  const res = json({ ok: true });
+  res.headers.append("Set-Cookie", sessionCookie("", 0));
+  return res;
 }
 
 // ---------- validácia vstupu ----------
@@ -447,7 +496,10 @@ export default {
       return handleFilmsApi(request, env);
     }
 
-    // Overenie prístupového kľúča (používa tlačidlo Odomknúť v appke)
+    if (url.pathname === "/api/login") return handleLogin(request, env);
+    if (url.pathname === "/api/logout" && request.method === "POST") return handleLogout();
+
+    // Overenie prihlásenia (používa tlačidlo Odomknúť v appke)
     if (url.pathname === "/api/auth-check") {
       const denied = await denyUnlessAdmin(request, env);
       return denied || json({ ok: true });

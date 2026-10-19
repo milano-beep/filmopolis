@@ -1,6 +1,8 @@
 name = "filmopolis"
 main = "worker.js"
 compatibility_date = "2026-07-01"
+# Premenné a tajomstvá nastavené v Cloudflare dashboarde sa pri nasadení nezmažú
+keep_vars = true
 
 [assets]
 directory = "./public"
