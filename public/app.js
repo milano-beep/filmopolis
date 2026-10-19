@@ -190,6 +190,13 @@ document.getElementById('stats').addEventListener('click', e=>{
 
 document.addEventListener('error', e => {
   const img = e.target;
+  if(img && img.tagName === 'IMG' && img.dataset && img.dataset.initials !== undefined){
+    const ph = document.createElement('span');
+    ph.className = 'person-initials';
+    ph.textContent = img.dataset.initials;
+    img.replaceWith(ph);
+    return;
+  }
   if(img && img.tagName === 'IMG' && img.dataset && img.dataset.fallback){
     const ph = document.createElement('div');
     ph.className = 'poster-placeholder';
@@ -402,6 +409,100 @@ function renderDetailRating(){
   document.getElementById('detailRatingClear').style.visibility = detailDraftRating == null ? 'hidden' : 'visible';
 }
 
+const TMDB_STATUS = { 'Released':'Vydané', 'Ended':'Ukončený', 'Returning Series':'Pokračuje', 'Canceled':'Zrušený', 'In Production':'Vo výrobe', 'Post Production':'Postprodukcia', 'Planned':'Plánované' };
+const tmdbExtraCache = new Map();
+
+function formatRuntime(min){
+  if(!min) return '';
+  const h = Math.floor(min / 60), m = min % 60;
+  return h ? (m ? h + ' h ' + m + ' min' : h + ' h') : m + ' min';
+}
+function seasonsLabel(n){ return n === 1 ? '1 séria' : (n >= 2 && n <= 4 ? n + ' série' : n + ' sérií'); }
+function episodesLabel(n){ return n === 1 ? '1 epizóda' : (n >= 2 && n <= 4 ? n + ' epizódy' : n + ' epizód'); }
+function initialsOf(name){ return String(name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
+function tmdbIdOf(item){ const n = Number(item.tmdbId); return Number.isInteger(n) && n > 0 ? n : 0; }
+
+async function loadTmdbExtra(item){
+  const id = tmdbIdOf(item);
+  if(!id) return null;
+  const type = item.type === 'seriál' ? 'tv' : 'movie';
+  const key = type + ':' + id;
+  if(tmdbExtraCache.has(key)) return tmdbExtraCache.get(key);
+  const res = await fetch('/api/tmdb/title?type=' + type + '&id=' + id);
+  if(!res.ok) throw new Error('TMDb ' + res.status);
+  const x = await res.json();
+  tmdbExtraCache.set(key, x);
+  return x;
+}
+
+function renderDetailFacts(item, x){
+  const logo = safeImg(item.providerLogo).replace(/\/w(45|92)\//, '/w154/');
+  const id = tmdbIdOf(item);
+  const tmdbUrl = id ? 'https://www.themoviedb.org/' + (item.type === 'seriál' ? 'tv' : 'movie') + '/' + id : '';
+  const facts = [];
+  if(!x){
+    if(item.director) facts.push(['Réžia', escapeHTML(item.director)]);
+    if(item.actors) facts.push(['Hrajú', escapeHTML(item.actors)]);
+  }
+  if(item.public != null) facts.push(['TMDb', escapeHTML(String(item.public)) + ' %']);
+  if(x && x.status) facts.push(['Stav', escapeHTML(TMDB_STATUS[x.status] || x.status)]);
+  if(item.providerName) facts.push(['Pozrieť na', (logo ? `<img src="${escapeHTML(logo)}" alt="">` : '') + escapeHTML(item.providerName)]);
+  const links = [];
+  if(tmdbUrl) links.push(`<a href="${tmdbUrl}" target="_blank" rel="noopener">TMDb</a>`);
+  if(x && /^tt\d{5,12}$/.test(x.imdbId || '')) links.push(`<a href="https://www.imdb.com/title/${x.imdbId}/" target="_blank" rel="noopener">IMDb</a>`);
+  if(links.length) facts.push(['Odkazy', links.join(' &nbsp;·&nbsp; ')]);
+  document.getElementById('detailFacts').innerHTML = facts.map(f => `<dt>${f[0]}</dt><dd>${f[1]}</dd>`).join('');
+}
+
+function personHTML(p, showRole){
+  const photo = safeImg(p.photo);
+  const ini = escapeHTML(initialsOf(p.name));
+  const pic = photo
+    ? `<img src="${escapeHTML(photo)}" alt="" loading="lazy" data-initials="${ini}">`
+    : `<span class="person-initials">${ini}</span>`;
+  const pid = Number.isInteger(p.id) && p.id > 0 ? p.id : 0;
+  const open = pid ? `<a class="person" href="https://www.themoviedb.org/person/${pid}" target="_blank" rel="noopener" title="${escapeHTML(p.name)} na TMDb">` : '<div class="person">';
+  return open + `<span class="person-photo">${pic}</span><span class="person-name">${escapeHTML(p.name)}</span>` +
+    (showRole && p.role ? `<span class="person-role">${escapeHTML(p.role)}</span>` : '') + (pid ? '</a>' : '</div>');
+}
+
+function renderDetailRich(item, x, state){
+  const box = document.getElementById('detailRich');
+  let html = '';
+  if(state === 'loading') html = '<div class="detail-loading">Načítavam údaje z TMDb…</div>';
+  else if(state === 'error') html = '<div class="detail-loading">Údaje z TMDb sa nepodarilo načítať.</div>';
+  else if(x){
+    if(x.directors && x.directors.length){
+      html += `<div class="detail-section"><h3>${item.type === 'seriál' ? 'Tvorcovia' : 'Réžia'}</h3><div class="people-row">${x.directors.map(p => personHTML(p, false)).join('')}</div></div>`;
+    }
+    if(x.cast && x.cast.length){
+      html += `<div class="detail-section"><h3>Obsadenie</h3><div class="people-row">${x.cast.map(p => personHTML(p, true)).join('')}</div></div>`;
+    }
+    if(x.trailer && /^[\w-]{6,20}$/.test(x.trailer.key || '')){
+      html += `<div class="detail-section"><a class="btn trailer-btn" href="https://www.youtube.com/watch?v=${x.trailer.key}" target="_blank" rel="noopener"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>Trailer na YouTube</a></div>`;
+    }
+  }
+  box.innerHTML = html;
+}
+
+function applyDetailText(item, x){
+  const typeLabel = item.type === 'seriál' ? 'Seriál' : 'Film';
+  const parts = [item.year, typeLabel];
+  if(x){
+    if(item.type === 'seriál'){
+      if(x.seasons) parts.push(seasonsLabel(x.seasons));
+      if(x.episodes) parts.push(episodesLabel(x.episodes));
+    }
+    if(x.runtime) parts.push(formatRuntime(x.runtime) + (item.type === 'seriál' ? ' / epizóda' : ''));
+  }
+  document.getElementById('detailSub').textContent = parts.filter(Boolean).join(', ');
+  document.getElementById('detailTagline').textContent = x && x.tagline ? x.tagline : '';
+  const text = (x && x.overview) || item.summary || '';
+  const summary = document.getElementById('detailSummary');
+  summary.innerHTML = escapeHTML(text) + (x && x.overview && x.overviewLang === 'en' ? ' <span class="detail-lang">(anglicky, slovenský popis nie je dostupný)</span>' : '');
+  summary.style.display = text ? '' : 'none';
+}
+
 function openDetail(id){
   const item = data.find(d => d.id === id);
   if(!item) return;
@@ -417,22 +518,22 @@ function openDetail(id){
   const orig = document.getElementById('detailOriginal');
   orig.textContent = item.original && item.original !== item.title ? item.original : '';
   orig.style.display = orig.textContent ? '' : 'none';
-  document.getElementById('detailSub').textContent = [item.year, item.type === 'seriál' ? 'Seriál' : 'Film'].filter(Boolean).join(', ');
   document.getElementById('detailTags').innerHTML = splitGenres(item.genre).map(g => `<span>${escapeHTML(g)}</span>`).join('');
 
-  const logo = safeImg(item.providerLogo).replace(/\/w(45|92)\//, '/w154/');
-  const tmdbUrl = Number.isInteger(Number(item.tmdbId)) && Number(item.tmdbId) > 0 ? `https://www.themoviedb.org/${item.type === 'seriál' ? 'tv' : 'movie'}/${item.tmdbId}` : '';
-  const facts = [];
-  if(item.director) facts.push(['Réžia', escapeHTML(item.director)]);
-  if(item.actors) facts.push(['Hrajú', escapeHTML(item.actors)]);
-  if(item.public != null) facts.push(['TMDb', escapeHTML(String(item.public)) + ' %']);
-  if(item.providerName) facts.push(['Pozrieť na', (logo ? `<img src="${escapeHTML(logo)}" alt="">` : '') + escapeHTML(item.providerName)]);
-  if(tmdbUrl) facts.push(['Odkaz', `<a href="${tmdbUrl}" target="_blank" rel="noopener">Otvoriť na TMDb</a>`]);
-  document.getElementById('detailFacts').innerHTML = facts.map(f => `<dt>${f[0]}</dt><dd>${f[1]}</dd>`).join('');
-
-  const summary = document.getElementById('detailSummary');
-  summary.textContent = item.summary || '';
-  summary.style.display = item.summary ? '' : 'none';
+  renderDetailFacts(item, null);
+  applyDetailText(item, null);
+  const hasTmdb = tmdbIdOf(item) > 0;
+  renderDetailRich(item, null, hasTmdb ? 'loading' : '');
+  if(hasTmdb){
+    loadTmdbExtra(item).then(x => {
+      if(detailItem !== item || !x) return;       // medzitým si zavrel alebo otvoril iný titul
+      renderDetailFacts(item, x);
+      applyDetailText(item, x);
+      renderDetailRich(item, x, '');
+    }).catch(() => {
+      if(detailItem === item) renderDetailRich(item, null, 'error');
+    });
+  }
 
   detailNotes.value = item.notes || '';
   renderDetailRating();

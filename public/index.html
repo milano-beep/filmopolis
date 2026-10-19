@@ -242,9 +242,57 @@
   .detail.readonly .notes-section,
   .detail.readonly .detail-actions { display: none; }
   .detail.readonly { padding-bottom: 24px; }
+  .detail-tagline { margin-top: 6px; font-size: 0.85rem; font-style: italic; color: var(--text-secondary); }
+  .detail-tagline:empty { display: none; }
+  .detail-lang { font-size: 0.75rem; opacity: 0.7; }
+  .detail-loading { margin: 16px 24px 0; font-size: 0.8rem; color: var(--text-secondary); }
+  .people-row {
+    display: flex;
+    gap: 14px;
+    margin: 0 -24px;
+    padding: 0 24px 8px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .person {
+    flex: 0 0 84px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    color: inherit;
+    text-decoration: none;
+  }
+  .person:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 10px; }
+  .person-photo {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-2);
+    border: 1px solid var(--border-color);
+  }
+  .person-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .person-initials { font-weight: 700; font-size: 1.1rem; color: var(--text-secondary); }
+  .person-name {
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .person:hover .person-name { color: var(--accent); }
+  .person-role { font-size: 0.7rem; line-height: 1.2; color: var(--text-secondary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .trailer-btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
   .detail-locked { display: none; align-items: center; justify-content: space-between; gap: 14px; margin-top: 14px; padding: 12px 14px; border: 1px dashed var(--border-strong); border-radius: 12px; font-size: 0.85rem; color: var(--text-secondary); }
   .detail.readonly .detail-locked { display: flex; }
-  @media (max-width: 768px) { .detail-locked { flex-direction: column; align-items: stretch; text-align: center; } }
+  @media (max-width: 768px) { .people-row { margin: 0 -16px; padding: 0 16px 8px; } .detail-loading { margin: 14px 16px 0; } .detail-locked { flex-direction: column; align-items: stretch; text-align: center; } }
   #search[readonly] { cursor: pointer; }
   .stats { display: flex; gap: 30px; }
   .stat {
@@ -767,11 +815,13 @@
         <h2 id="detailTitle"></h2>
         <div class="detail-original" id="detailOriginal"></div>
         <div class="detail-sub" id="detailSub"></div>
+        <div class="detail-tagline" id="detailTagline"></div>
         <div class="detail-tags" id="detailTags"></div>
         <dl class="detail-facts" id="detailFacts"></dl>
       </div>
     </div>
     <p class="detail-summary" id="detailSummary"></p>
+    <div id="detailRich"></div>
     <div class="detail-section">
       <h3>Hodnotenie</h3>
       <div class="rating-editor">
