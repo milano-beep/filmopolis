@@ -283,11 +283,29 @@ async function handleFilmsApi(request, env) {
 
 // ---------- TMDb proxy (kľúč ostáva na serveri) ----------
 
+// Kľúč bez medzier a nových riadkov, ktoré sa často dostanú do hodnoty pri vkladaní.
+function tmdbKey(env) {
+  return typeof env.TMDB_API_KEY === "string" ? env.TMDB_API_KEY.trim() : "";
+}
+
+// Ukáže, čo server vidí (len áno/nie a tvar, nikdy nie hodnoty). Len pre prihláseného.
+function handleConfigCheck(env) {
+  const key = tmdbKey(env);
+  return json({
+    adminToken: !!env.ADMIN_TOKEN,
+    tmdbApiKey: !key ? "nenastavený" : /^[0-9a-f]{32}$/i.test(key) ? "nastavený (v3 kľúč)" : key.startsWith("eyJ") ? "nastavený (v4 token)" : "nastavený, ale má nezvyčajný tvar",
+    traktClientId: !!env.TRAKT_CLIENT_ID,
+    traktClientSecret: !!env.TRAKT_CLIENT_SECRET,
+    kvDatabaza: !!env.FILMOPOLIS_KV,
+  });
+}
+
 async function handleTmdb(request, env, url) {
   const denied = await denyUnlessAdmin(request, env);
   if (denied) return denied;
   if (request.method !== "GET") return json({ error: "Method not allowed" }, 405);
-  if (!env.TMDB_API_KEY) return json({ error: "Na serveri nie je nastavený TMDB_API_KEY." }, 503);
+  const key = tmdbKey(env);
+  if (!key) return json({ error: "Na serveri nie je nastavený TMDB_API_KEY." }, 503);
 
   let path;
   if (url.pathname === "/api/tmdb/search") {
@@ -305,7 +323,6 @@ async function handleTmdb(request, env, url) {
     return json({ error: "Not found" }, 404);
   }
 
-  const key = env.TMDB_API_KEY;
   const bearer = key.startsWith("eyJ");
   const upstream = "https://api.themoviedb.org/3" + path + (bearer ? "" : `&api_key=${encodeURIComponent(key)}`);
   const res = await fetch(upstream, bearer ? { headers: { Authorization: `Bearer ${key}` } } : {});
@@ -494,6 +511,11 @@ export default {
 
     if (url.pathname === "/api/films") {
       return handleFilmsApi(request, env);
+    }
+
+    if (url.pathname === "/api/config-check") {
+      const denied = await denyUnlessAdmin(request, env);
+      return denied || handleConfigCheck(env);
     }
 
     if (url.pathname === "/api/login") return handleLogin(request, env);
