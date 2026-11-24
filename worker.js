@@ -151,16 +151,24 @@ function intOrNull(v, min, max) {
   return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
 }
 
+// Celkové hodnotenie = priemer B a M (ak je vyplnené len jedno, platí to jedno).
+function avgRating(m, b) {
+  const v = [m, b].filter((x) => Number.isInteger(x));
+  return v.length ? Math.round(v.reduce((a, c) => a + c, 0) / v.length) : null;
+}
+
 function cleanEntry(e) {
   if (!e || typeof e !== "object" || Array.isArray(e)) return { error: "Neplatné dáta." };
   const title = str(e.title, 200);
   if (!title) return { error: "Chýba názov." };
   if (e.type !== "film" && e.type !== "seriál") return { error: "Neplatný typ." };
 
-  const rating = intOrNull(e.rating, 0, 100);
+  const legacyRating = intOrNull(e.rating, 0, 100);
+  const milan = intOrNull(e.milan, 0, 100);
+  const basa = intOrNull(e.basa, 0, 100);
   const pub = intOrNull(e.public, 0, 100);
   const tmdbId = intOrNull(e.tmdbId, 1, 999999999);
-  if (rating === undefined || pub === undefined || tmdbId === undefined) {
+  if (legacyRating === undefined || milan === undefined || basa === undefined || pub === undefined || tmdbId === undefined) {
     return { error: "Neplatné číslo." };
   }
   const year = e.year == null || e.year === "" ? null : /^\d{4}$/.test(String(e.year)) ? String(e.year) : undefined;
@@ -178,7 +186,9 @@ function cleanEntry(e) {
       original: str(e.original, 200),
       type: e.type,
       year,
-      rating,
+      rating: avgRating(milan, basa) ?? legacyRating,
+      milan,
+      basa,
       notes: str(e.notes, 5000),
       public: pub,
       poster,
@@ -193,12 +203,12 @@ function cleanEntry(e) {
   };
 }
 
-// Polia, ktoré sa dajú meniť cez PATCH (milan/basa len na vynulovanie starého hodnotenia).
+// Polia, ktoré sa dajú meniť cez PATCH. Celkové hodnotenie ("rating") sa nemení priamo,
+// vždy sa prepočíta ako priemer B (basa) a M (milan).
 const PATCHABLE = {
-  rating: (v) => intOrNull(v, 0, 100),
   notes: (v) => (typeof v === "string" ? v.trim().slice(0, 5000) : undefined),
-  milan: (v) => (v === null ? null : undefined),
-  basa: (v) => (v === null ? null : undefined),
+  milan: (v) => intOrNull(v, 0, 100),
+  basa: (v) => intOrNull(v, 0, 100),
 };
 
 async function readJson(request) {
@@ -277,9 +287,11 @@ async function handleFilmsApi(request, env) {
     if (cleaned === undefined) return json({ error: `Neplatná hodnota poľa "${key}".` }, 400);
     patch[key] = cleaned;
   }
-  films[index] = { ...films[index], ...patch };
+  const merged = { ...films[index], ...patch };
+  if ("milan" in patch || "basa" in patch) merged.rating = avgRating(merged.milan, merged.basa);
+  films[index] = merged;
   await env.FILMOPOLIS_KV.put("films", JSON.stringify(films));
-  return json({ ok: true });
+  return json({ ok: true, rating: merged.rating ?? null });
 }
 
 // ---------- TMDb proxy (kľúč ostáva na serveri) ----------
@@ -561,7 +573,9 @@ async function handleTraktSync(env) {
     const existing = tmdbId ? films.find((f) => f.tmdbId === tmdbId) : null;
 
     if (existing) {
-      existing.rating = convertedRating;
+      // Trakt účet je Milanov, preto sa jeho hodnotenie ukladá do M; B ostáva nedotknuté.
+      existing.milan = convertedRating;
+      existing.rating = avgRating(existing.milan, Number.isInteger(existing.basa) ? existing.basa : null);
       updated++;
     } else {
       if (films.length >= MAX_FILMS) break;
@@ -573,7 +587,7 @@ async function handleTraktSync(env) {
         type: t.kind,
         year: t.year ? String(t.year) : null,
         rating: convertedRating,
-        milan: null,
+        milan: convertedRating,
         basa: null,
         public: null,
         genre: "",
