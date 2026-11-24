@@ -237,8 +237,6 @@
   .modal-actions .spacer { flex: 1; }
   .modal-actions .btn-quiet-danger { margin-right: auto; }
   /* zamknutý režim: detail len na čítanie */
-  .detail.readonly #detailRating,
-  .detail.readonly #detailRatingClear,
   .detail.readonly .notes-section,
   .detail.readonly .detail-actions { display: none; }
   .detail.readonly { padding-bottom: 24px; }
@@ -709,19 +707,59 @@
   .detail-summary { margin: 16px 24px 0; font-size: 0.88rem; line-height: 1.55; color: var(--text-secondary); }
   .detail-section { padding: 22px 24px 0; }
   .detail-section h3 { margin: 0 0 10px; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
-  .rating-editor { display: flex; align-items: center; gap: 16px; }
-  .rating-value {
-    flex: 0 0 auto;
-    min-width: 92px;
+  .rating-trio { display: grid; grid-template-columns: 1fr 1fr 1.25fr; gap: 12px; align-items: stretch; }
+  .rating-cell { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .rating-cell-label { font-size: 0.78rem; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.04em; }
+  .rating-box {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-main);
+    cursor: text;
+  }
+  .rating-box:focus-within { border-color: var(--accent); background: var(--surface-2); }
+  .rating-box input {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: none;
+    color: var(--text-primary);
     font-family: 'Outfit', sans-serif;
-    font-size: 2rem;
+    font-size: 1.9rem;
     font-weight: 700;
-    line-height: 1;
+    line-height: 1.25;
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  .rating-box input::-webkit-outer-spin-button,
+  .rating-box input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .rating-box input::placeholder { color: var(--border-strong); }
+  .rating-unit { font-size: 0.95rem; font-weight: 600; color: var(--text-secondary); }
+  .rating-avg-value {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    padding: 6px 4px 0 2px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.25;
     letter-spacing: -0.01em;
   }
-  .rating-value.empty { font-size: 1rem; font-weight: 600; color: var(--text-secondary); }
-  .rating-value .rating-star { font-size: 1.4rem; margin-right: 4px; }
-  .rating-editor input[type=range] { flex: 1 1 auto; min-width: 0; accent-color: var(--accent); height: 28px; }
+  .rating-avg-value .rating-star { font-size: 1.6rem; margin-right: 6px; }
+  .rating-avg-value small { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin-left: 3px; }
+  .rating-avg-value.empty { font-size: 1.6rem; color: var(--border-strong); }
+  .rating-legacy { margin: 10px 0 0; font-size: 0.8rem; color: var(--text-secondary); }
+  .rating-legacy:empty { display: none; }
+  /* zamknutý režim: polia sú len na čítanie */
+  .detail.readonly .rating-box { border-color: transparent; background: none; padding-left: 0; cursor: default; }
+  .detail.readonly .rating-box input::placeholder { color: var(--text-secondary); }
   .detail-section textarea {
     width: 100%;
     min-height: 110px;
@@ -759,7 +797,11 @@
     .detail-summary { margin: 14px 16px 0; }
     .detail-section { padding: 18px 16px 0; }
     .detail-actions { padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); }
-    .rating-value { min-width: 78px; font-size: 1.7rem; }
+    .rating-trio { gap: 8px; grid-template-columns: 1fr 1fr 1.2fr; }
+    .rating-box { padding: 6px 10px; }
+    .rating-box input { font-size: 1.6rem; }
+    .rating-avg-value { font-size: 1.8rem; }
+    .rating-avg-value .rating-star { font-size: 1.3rem; margin-right: 4px; }
   }
 </style>
 </head>
@@ -824,11 +866,21 @@
     <div id="detailRich"></div>
     <div class="detail-section">
       <h3>Hodnotenie</h3>
-      <div class="rating-editor">
-        <div class="rating-value" id="detailRatingValue"></div>
-        <input type="range" id="detailRating" min="0" max="100" step="1" aria-label="Hodnotenie v percentách">
-        <button type="button" class="btn ghost" id="detailRatingClear">Bez hodnotenia</button>
+      <div class="rating-trio">
+        <label class="rating-cell" for="detailRatingB">
+          <span class="rating-cell-label">B</span>
+          <span class="rating-box"><input type="number" id="detailRatingB" inputmode="numeric" min="0" max="100" step="1" placeholder="–" autocomplete="off" aria-label="Hodnotenie B v percentách"><span class="rating-unit">%</span></span>
+        </label>
+        <label class="rating-cell" for="detailRatingM">
+          <span class="rating-cell-label">M</span>
+          <span class="rating-box"><input type="number" id="detailRatingM" inputmode="numeric" min="0" max="100" step="1" placeholder="–" autocomplete="off" aria-label="Hodnotenie M v percentách"><span class="rating-unit">%</span></span>
+        </label>
+        <div class="rating-cell rating-avg" aria-live="polite">
+          <span class="rating-cell-label">Priemer</span>
+          <span class="rating-avg-value" id="detailRatingAvg"></span>
+        </div>
       </div>
+      <p class="rating-legacy" id="detailRatingLegacy"></p>
       <div class="detail-locked">
         <span>Na hodnotenie a poznámky najprv odomkni úpravy.</span>
         <button type="button" class="btn btn-large-add" id="detailUnlock">Odomknúť</button>
@@ -886,6 +938,6 @@
   </div>
 </div>
 
-<script src="/app.js" defer></script>
+<script src="/app.js?v=bm1" defer></script>
 </body>
 </html>

@@ -37,11 +37,9 @@ function reportError(err, fallback){
   alert(err && err.status ? err.message : fallback);
 }
 
+// Celkové hodnotenie je priemer B a M; staré záznamy s jediným číslom ostávajú platné.
 function applyLegacyRating(item){
-  if(item.rating == null){
-    const legacy = [item.milan, item.basa].filter(v => v != null && Number.isFinite(Number(v)));
-    item.rating = legacy.length ? Math.round(legacy.reduce((a,b)=>a+Number(b),0) / legacy.length) : null;
-  }
+  item.rating = getCombinedRating(item);
   return item;
 }
 
@@ -209,8 +207,24 @@ function escapeHTML(s){
   return (s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
+function ratingNum(v){
+  return v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
+}
+function averageOf(m, b){
+  const v = [m, b].filter(x => x != null);
+  return v.length ? Math.round(v.reduce((a, c) => a + c, 0) / v.length) : null;
+}
+// Priemer B a M (ak je len jedno, platí to jedno). Bez nich platí staré spoločné číslo.
 function getCombinedRating(item){
-  return item.rating != null && Number.isFinite(Number(item.rating)) ? Number(item.rating) : null;
+  const avg = averageOf(ratingNum(item.milan), ratingNum(item.basa));
+  return avg != null ? avg : ratingNum(item.rating);
+}
+
+function ratingTitle(item){
+  const parts = [];
+  if(ratingNum(item.basa) != null) parts.push('B ' + ratingNum(item.basa) + ' %');
+  if(ratingNum(item.milan) != null) parts.push('M ' + ratingNum(item.milan) + ' %');
+  return parts.length === 2 ? 'Priemer · ' + parts.join(' · ') : (parts[0] || 'Hodnotenie');
 }
 
 function rowHTML(item){
@@ -234,7 +248,7 @@ function rowHTML(item){
     : `<div class="poster-placeholder">${escapeHTML(item.title)}</div>`;
     
   const ratingInline = combined != null
-    ? `<span class="rating-inline" title="Moje hodnotenie"><span class="rating-star">★</span>${combined}<small>%</small></span>`
+    ? `<span class="rating-inline" title="${escapeHTML(ratingTitle(item))}"><span class="rating-star">★</span>${combined}<small>%</small></span>`
     : '';
   const posterHTML = `<div class="poster-frame">${posterInner}${unwatchedOverlay}</div>`;
 
@@ -390,24 +404,52 @@ rowsEl.addEventListener('click', e=>{
 
 /* Detail titulu: hodnotenie, poznámky, informácie a mazanie na jednom mieste */
 const detailOverlay = document.getElementById('detailOverlay');
-const detailRating = document.getElementById('detailRating');
-const detailRatingValue = document.getElementById('detailRatingValue');
 const detailNotes = document.getElementById('detailNotes');
+const inputB = document.getElementById('detailRatingB');
+const inputM = document.getElementById('detailRatingM');
+const avgEl = document.getElementById('detailRatingAvg');
+const legacyEl = document.getElementById('detailRatingLegacy');
 let detailItem = null;
-let detailDraftRating = null;
+let draft = { b: null, m: null };         // rozpracované B a M
+let touched = { b: false, m: false };     // či používateľ do poľa zasiahol
+let detailLegacy = null;                  // staré spoločné hodnotenie bez rozdelenia na B a M
 
-function renderDetailRating(){
-  if(detailDraftRating == null){
-    detailRatingValue.className = 'rating-value empty';
-    detailRatingValue.textContent = 'Bez hodnotenia';
-    detailRating.value = 50;
+function renderDetailAvg(){
+  const legacyActive = detailLegacy != null && !touched.b && !touched.m;
+  const avg = averageOf(draft.m, draft.b);
+  const shown = avg != null ? avg : (legacyActive ? detailLegacy : null);
+  if(shown == null){
+    avgEl.className = 'rating-avg-value empty';
+    avgEl.textContent = '–';
   } else {
-    detailRatingValue.className = 'rating-value';
-    detailRatingValue.innerHTML = '<span class="rating-star">★</span>' + detailDraftRating + ' %';
-    detailRating.value = detailDraftRating;
+    avgEl.className = 'rating-avg-value';
+    avgEl.innerHTML = '<span class="rating-star">★</span>' + shown + '<small>%</small>';
   }
-  document.getElementById('detailRatingClear').style.visibility = detailDraftRating == null ? 'hidden' : 'visible';
+  legacyEl.textContent = legacyActive
+    ? 'Doterajšie hodnotenie ' + detailLegacy + ' % bolo uložené bez rozdelenia na B a M. Keď zadáš B alebo M, nahradí ho priemer.'
+    : '';
 }
+
+function readRatingField(el){
+  const raw = el.value.trim();
+  if(raw === '') return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? Math.min(100, Math.max(0, Math.round(n))) : null;
+}
+function bindRatingField(el, key){
+  el.addEventListener('input', ()=>{
+    touched[key] = true;
+    const raw = el.value.trim();
+    if(raw !== '' && Number(raw) > 100) el.value = '100';
+    if(raw !== '' && Number(raw) < 0) el.value = '0';
+    draft[key] = readRatingField(el);
+    renderDetailAvg();
+  });
+  el.addEventListener('blur', ()=>{ el.value = draft[key] == null ? '' : String(draft[key]); });
+  el.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); el.blur(); } });
+}
+bindRatingField(inputB, 'b');
+bindRatingField(inputM, 'm');
 
 const TMDB_STATUS = { 'Released':'Vydané', 'Ended':'Ukončený', 'Returning Series':'Pokračuje', 'Canceled':'Zrušený', 'In Production':'Vo výrobe', 'Post Production':'Postprodukcia', 'Planned':'Plánované' };
 const tmdbExtraCache = new Map();
@@ -507,7 +549,12 @@ function openDetail(id){
   const item = data.find(d => d.id === id);
   if(!item) return;
   detailItem = item;
-  detailDraftRating = getCombinedRating(item);
+  draft = { b: ratingNum(item.basa), m: ratingNum(item.milan) };
+  touched = { b: false, m: false };
+  detailLegacy = (draft.b == null && draft.m == null) ? ratingNum(item.rating) : null;
+  inputB.value = draft.b == null ? '' : String(draft.b);
+  inputM.value = draft.m == null ? '' : String(draft.m);
+  inputB.readOnly = inputM.readOnly = !unlocked;
 
   const poster = safeImg(item.poster).replace(/\/w(92|154|185)\//, '/w500/');
   document.getElementById('detailPoster').innerHTML = poster
@@ -536,7 +583,7 @@ function openDetail(id){
   }
 
   detailNotes.value = item.notes || '';
-  renderDetailRating();
+  renderDetailAvg();
   detailOverlay.querySelector('.detail').classList.toggle('readonly', !unlocked);
   detailOverlay.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -545,7 +592,9 @@ function openDetail(id){
 
 function detailIsDirty(){
   if(!detailItem) return false;
-  return detailDraftRating !== getCombinedRating(detailItem) || detailNotes.value.trim() !== (detailItem.notes || '').trim();
+  const legacyTouched = detailLegacy != null && (touched.b || touched.m);
+  return draft.b !== ratingNum(detailItem.basa) || draft.m !== ratingNum(detailItem.milan) || legacyTouched ||
+    detailNotes.value.trim() !== (detailItem.notes || '').trim();
 }
 function closeDetail(force){
   if(!force && detailIsDirty() && !confirm('Zahodiť neuložené zmeny?')) return;
@@ -554,18 +603,12 @@ function closeDetail(force){
   detailItem = null;
 }
 
-detailRating.addEventListener('input', ()=>{ detailDraftRating = Number(detailRating.value); renderDetailRating(); });
-// klik/Enter na posuvník bez posunu (napr. presne 50 %) tiež nastaví hodnotenie
-['pointerup','keyup'].forEach(ev => detailRating.addEventListener(ev, ()=>{
-  if(detailDraftRating == null){ detailDraftRating = Number(detailRating.value); renderDetailRating(); }
-}));
 let reopenAfterUnlock = null;
 document.getElementById('detailUnlock').addEventListener('click', ()=>{
   reopenAfterUnlock = detailItem ? detailItem.id : null;
   closeDetail(true);
   openSettings('Na hodnotenie a poznámky najprv odomkni úpravy.');
 });
-document.getElementById('detailRatingClear').addEventListener('click', ()=>{ detailDraftRating = null; renderDetailRating(); });
 document.getElementById('detailClose').addEventListener('click', ()=> closeDetail());
 document.getElementById('detailCancel').addEventListener('click', ()=> closeDetail());
 detailOverlay.addEventListener('click', e=>{ if(e.target === detailOverlay) closeDetail(); });
@@ -580,19 +623,24 @@ document.getElementById('detailDelete').addEventListener('click', ()=>{
 document.getElementById('detailSave').addEventListener('click', async ()=>{
   const item = detailItem;
   if(!item) return;
-  const newRating = detailDraftRating;
-  const newNotes = detailNotes.value.trim();
-  const prev = { rating: item.rating, notes: item.notes };
-  item.rating = newRating;
-  item.notes = newNotes;
+  const orig = { b: ratingNum(item.basa), m: ratingNum(item.milan) };
+  const legacy = detailLegacy != null;
+  // pošle sa len to, čo sa zmenilo; staré spoločné hodnotenie sa nezmaže, kým nezadáš B alebo M
+  const patch = { id: item.id, notes: detailNotes.value.trim() };
+  if(draft.b !== orig.b || (legacy && touched.b)) patch.basa = draft.b;
+  if(draft.m !== orig.m || (legacy && touched.m)) patch.milan = draft.m;
+  const prev = { basa: item.basa, milan: item.milan, rating: item.rating, notes: item.notes };
+  item.notes = patch.notes;
+  if('basa' in patch) item.basa = patch.basa;
+  if('milan' in patch) item.milan = patch.milan;
+  if('basa' in patch || 'milan' in patch) item.rating = averageOf(ratingNum(item.milan), ratingNum(item.basa));
   closeDetail(true);
   applyFiltersAndRender();
   try{
-    await apiPatch({ id: item.id, rating: newRating, milan: null, basa: null, notes: newNotes });
+    await apiPatch(patch);
   }catch(err){
     console.error('Uloženie zlyhalo:', err);
-    item.rating = prev.rating;
-    item.notes = prev.notes;
+    Object.assign(item, prev);
     applyFiltersAndRender();
     reportError(err, 'Uloženie sa nepodarilo — skontroluj pripojenie.');
   }
@@ -744,6 +792,8 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     year: item.year,
     genre: item.genre,
     rating: getCombinedRating(item),
+    ratingB: ratingNum(item.basa),
+    ratingM: ratingNum(item.milan),
     notes: item.notes || '',
     tmdbRating: item.public || null,
     provider: item.providerName || ''
@@ -853,6 +903,8 @@ async function handleSelectTmdbItem(tmdbId, mediaType){
       type: mediaType === 'tv' ? 'seriál' : 'film',
       year: (d.release_date || d.first_air_date || '').slice(0,4) || null,
       rating: null,
+      milan: null,
+      basa: null,
       notes: '',
       public: d.vote_average ? Math.round(d.vote_average * 10) : null,
       poster: d.poster_path ? `https://image.tmdb.org/t/p/w500${d.poster_path}` : '',
