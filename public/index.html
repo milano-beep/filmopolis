@@ -18,6 +18,7 @@
     --accent-hover: #b0a0ff;
     --on-accent: #17141f;
     --star: #f4b942;
+    --ok: #4cd17e;
     --border-color: #34303f;
     --border-strong: #4a4558;
     --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
@@ -755,8 +756,22 @@
   .rating-avg-value .rating-star { font-size: 1.6rem; margin-right: 6px; }
   .rating-avg-value small { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin-left: 3px; }
   .rating-avg-value.empty { font-size: 1.6rem; color: var(--border-strong); }
-  .rating-legacy { margin: 10px 0 0; font-size: 0.8rem; color: var(--text-secondary); }
-  .rating-legacy:empty { display: none; }
+  .rating-note { margin: 10px 0 0; font-size: 0.8rem; color: var(--text-secondary); }
+  .rating-note:empty { display: none; }
+  .vote-tick { display: inline-flex; vertical-align: -2px; margin-left: 4px; color: var(--ok); }
+  .vote-tick[hidden] { display: none; }
+  .vote-status { display: none; align-items: center; min-height: 52px; font-size: 0.95rem; font-weight: 600; }
+  .vote-status .vote-yes { display: inline-flex; align-items: center; gap: 6px; color: var(--ok); }
+  .vote-status .vote-no { color: var(--border-strong); }
+  .detail.readonly .vote-status { display: flex; }
+  .detail.readonly .rating-box, .detail.readonly .vote-tick { display: none; }
+  .vote-chips { display: inline-flex; gap: 6px; }
+  .vote-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 9px 4px 7px; border-radius: 999px;
+    font-family: 'Outfit', sans-serif; font-size: 0.95rem; font-weight: 700; line-height: 1;
+    color: var(--ok); background: rgba(76, 209, 126, 0.14); border: 1px solid rgba(76, 209, 126, 0.4);
+  }
   /* zamknutý režim: polia sú len na čítanie */
   .detail.readonly .rating-box { border-color: transparent; background: none; padding-left: 0; cursor: default; }
   .detail.readonly .rating-box input::placeholder { color: var(--text-secondary); }
@@ -868,19 +883,21 @@
       <h3>Hodnotenie</h3>
       <div class="rating-trio">
         <label class="rating-cell" for="detailRatingB">
-          <span class="rating-cell-label">B</span>
+          <span class="rating-cell-label">B <span class="vote-tick" id="voteTickB" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span></span>
           <span class="rating-box"><input type="number" id="detailRatingB" inputmode="numeric" min="0" max="100" step="1" placeholder="–" autocomplete="off" aria-label="Hodnotenie B v percentách"><span class="rating-unit">%</span></span>
+          <span class="vote-status" id="voteStatusB"></span>
         </label>
         <label class="rating-cell" for="detailRatingM">
-          <span class="rating-cell-label">M</span>
+          <span class="rating-cell-label">M <span class="vote-tick" id="voteTickM" hidden><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></span></span>
           <span class="rating-box"><input type="number" id="detailRatingM" inputmode="numeric" min="0" max="100" step="1" placeholder="–" autocomplete="off" aria-label="Hodnotenie M v percentách"><span class="rating-unit">%</span></span>
+          <span class="vote-status" id="voteStatusM"></span>
         </label>
         <div class="rating-cell rating-avg" aria-live="polite">
           <span class="rating-cell-label">Priemer</span>
           <span class="rating-avg-value" id="detailRatingAvg"></span>
         </div>
       </div>
-      <p class="rating-legacy" id="detailRatingLegacy"></p>
+      <p class="rating-note" id="detailRatingNote"></p>
       <div class="detail-locked">
         <span>Na hodnotenie a poznámky najprv odomkni úpravy.</span>
         <button type="button" class="btn btn-large-add" id="detailUnlock">Odomknúť</button>
@@ -938,6 +955,6 @@
   </div>
 </div>
 
-<script src="/app.js?v=bm1" defer></script>
+<script src="/app.js?v=vote2" defer></script>
 </body>
 </html>
