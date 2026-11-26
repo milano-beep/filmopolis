@@ -151,10 +151,32 @@ function intOrNull(v, min, max) {
   return Number.isFinite(n) && n >= min && n <= max ? n : undefined;
 }
 
-// Celkové hodnotenie = priemer B a M (ak je vyplnené len jedno, platí to jedno).
+// Celkové hodnotenie = priemer B a M, ale len keď zahlasovali obaja.
 function avgRating(m, b) {
-  const v = [m, b].filter((x) => Number.isInteger(x));
-  return v.length ? Math.round(v.reduce((a, c) => a + c, 0) / v.length) : null;
+  return Number.isInteger(m) && Number.isInteger(b) ? Math.round((m + b) / 2) : null;
+}
+
+// Hodnotenie, ktoré smie vidieť každý: priemer (obaja hlasovali), alebo staré
+// spoločné hodnotenie (ak nehlasoval nikto). Jednostranné hodnotenie sa nikdy nezverejní.
+function effectiveRating(f) {
+  const both = avgRating(f.milan, f.basa);
+  if (both !== null) return both;
+  if (Number.isInteger(f.milan) || Number.isInteger(f.basa)) return null;
+  return Number.isInteger(f.rating) ? f.rating : null;
+}
+
+// Pohľad pre majiteľa: čísla B a M sa odhalia až keď hlasovali obaja (slepé hlasovanie),
+// dovtedy je vidno len príznak, že človek hlasoval.
+function ownerView(f) {
+  const both = avgRating(f.milan, f.basa) !== null;
+  const { milan, basa, ...rest } = f;
+  return { ...(both ? f : rest), votedB: Number.isInteger(basa), votedM: Number.isInteger(milan), rating: effectiveRating(f) };
+}
+
+// Verejný pohľad: bez poznámok a bez čísel B/M, len príznaky, že človek hlasoval.
+function publicView(f) {
+  const { notes, milan, basa, ...rest } = f;
+  return { ...rest, votedB: Number.isInteger(basa), votedM: Number.isInteger(milan), rating: effectiveRating(f) };
 }
 
 function cleanEntry(e) {
@@ -186,7 +208,7 @@ function cleanEntry(e) {
       original: str(e.original, 200),
       type: e.type,
       year,
-      rating: avgRating(milan, basa) ?? legacyRating,
+      rating: Number.isInteger(milan) || Number.isInteger(basa) ? avgRating(milan, basa) : legacyRating,
       milan,
       basa,
       notes: str(e.notes, 5000),
@@ -240,8 +262,8 @@ async function handleFilmsApi(request, env) {
   // Čítanie je verejné, ale osobné poznámky vidí len majiteľ.
   if (request.method === "GET") {
     const films = await loadFilms(env.FILMOPOLIS_KV);
-    if (await isAdmin(request, env)) return json(films);
-    return json(films.map(({ notes, ...rest }) => rest));
+    if (await isAdmin(request, env)) return json(films.map(ownerView));
+    return json(films.map(publicView));
   }
 
   if (!["POST", "PATCH", "DELETE"].includes(request.method)) {
@@ -264,7 +286,7 @@ async function handleFilmsApi(request, env) {
     const saved = { ...value, id: nextId };
     films.push(saved);
     await env.FILMOPOLIS_KV.put("films", JSON.stringify(films));
-    return json(saved, 201);
+    return json(ownerView(saved), 201);
   }
 
   if (!payload || !Number.isInteger(payload.id)) return json({ error: "Chýba platné id." }, 400);
@@ -291,7 +313,7 @@ async function handleFilmsApi(request, env) {
   if ("milan" in patch || "basa" in patch) merged.rating = avgRating(merged.milan, merged.basa);
   films[index] = merged;
   await env.FILMOPOLIS_KV.put("films", JSON.stringify(films));
-  return json({ ok: true, rating: merged.rating ?? null });
+  return json({ ok: true, rating: effectiveRating(merged), votedB: Number.isInteger(merged.basa), votedM: Number.isInteger(merged.milan) });
 }
 
 // ---------- TMDb proxy (kľúč ostáva na serveri) ----------
@@ -575,7 +597,7 @@ async function handleTraktSync(env) {
     if (existing) {
       // Trakt účet je Milanov, preto sa jeho hodnotenie ukladá do M; B ostáva nedotknuté.
       existing.milan = convertedRating;
-      existing.rating = avgRating(existing.milan, Number.isInteger(existing.basa) ? existing.basa : null);
+      existing.rating = avgRating(existing.milan, existing.basa);
       updated++;
     } else {
       if (films.length >= MAX_FILMS) break;
@@ -586,7 +608,7 @@ async function handleTraktSync(env) {
         original: "",
         type: t.kind,
         year: t.year ? String(t.year) : null,
-        rating: convertedRating,
+        rating: null,
         milan: convertedRating,
         basa: null,
         public: null,
