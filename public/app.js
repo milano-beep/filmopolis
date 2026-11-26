@@ -37,9 +37,12 @@ function reportError(err, fallback){
   alert(err && err.status ? err.message : fallback);
 }
 
-// Celkové hodnotenie je priemer B a M; staré záznamy s jediným číslom ostávajú platné.
+// Server posiela v "rating" len to, čo smie byť verejné (priemer, keď hlasovali obaja,
+// alebo staré spoločné hodnotenie). Tu sa len upratajú typy.
 function applyLegacyRating(item){
-  item.rating = getCombinedRating(item);
+  item.rating = ratingNum(item.rating);
+  item.votedB = item.votedB === true || ratingNum(item.basa) != null;
+  item.votedM = item.votedM === true || ratingNum(item.milan) != null;
   return item;
 }
 
@@ -106,7 +109,7 @@ function updateFilterToggleLabel(){
 }
 
 function renderGenrePills(){
-  const unwatchedCount = data.filter(d => getCombinedRating(d) == null).length;
+  const unwatchedCount = data.filter(isUnwatched).length;
   const groups = [];
   if(unwatchedCount) groups.push({ key:'status', label:'Stav', items:[['unwatched', 'Nepozreté', unwatchedCount]] });
 
@@ -171,7 +174,7 @@ function renderStats(){
   const series = data.length - films;
   const rated = data.map(getCombinedRating).filter(v => v != null);
   const avg = rated.length ? Math.round(rated.reduce((a, b) => a + b, 0) / rated.length) + ' %' : '–';
-  const unwatched = data.length - rated.length;
+  const unwatched = data.filter(isUnwatched).length;
   const active = activeFilters.status.has('unwatched');
   document.getElementById('stats').innerHTML = `
     <div class="stat"><b>${films}</b><span>filmov</span></div>
@@ -210,21 +213,24 @@ function escapeHTML(s){
 function ratingNum(v){
   return v != null && v !== '' && Number.isFinite(Number(v)) ? Number(v) : null;
 }
+// Priemer existuje, až keď zahlasujú obaja.
 function averageOf(m, b){
-  const v = [m, b].filter(x => x != null);
-  return v.length ? Math.round(v.reduce((a, c) => a + c, 0) / v.length) : null;
+  return m != null && b != null ? Math.round((m + b) / 2) : null;
 }
-// Priemer B a M (ak je len jedno, platí to jedno). Bez nich platí staré spoločné číslo.
+// Hodnotenie na zobrazenie: priemer alebo staré spoločné číslo (od servera). Jednostranné hodnotenie nie je verejné.
 function getCombinedRating(item){
-  const avg = averageOf(ratingNum(item.milan), ratingNum(item.basa));
-  return avg != null ? avg : ratingNum(item.rating);
+  return ratingNum(item.rating);
 }
-
-function ratingTitle(item){
-  const parts = [];
-  if(ratingNum(item.basa) != null) parts.push('B ' + ratingNum(item.basa) + ' %');
-  if(ratingNum(item.milan) != null) parts.push('M ' + ratingNum(item.milan) + ' %');
-  return parts.length === 2 ? 'Priemer · ' + parts.join(' · ') : (parts[0] || 'Hodnotenie');
+// Nepozreté = nikto nehlasoval a niet ani starého hodnotenia.
+function isUnwatched(item){
+  return !item.votedB && !item.votedM && getCombinedRating(item) == null;
+}
+const CHECK_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+function voteChips(item){
+  return [['B', item.votedB], ['M', item.votedM]]
+    .filter(([, v]) => v)
+    .map(([who]) => `<span class="vote-chip" title="${who} už hlasoval(a)" aria-label="${who} už hlasoval(a)">${CHECK_SVG}${who}</span>`)
+    .join('');
 }
 
 function rowHTML(item){
@@ -233,9 +239,9 @@ function rowHTML(item){
   const hqPoster = safeImg(item.poster).replace(/\/w(92|154|185)\//, '/w500/');
   const hqLogo = safeImg(item.providerLogo).replace(/\/w(45|92)\//, '/w154/');
 
-  const unwatched = combined == null;
-  const unwatchedOverlay = combined == null 
-    ? `<div class="poster-overlay-unwatched" title="Ešte nebolo dopozerané (bez hodnotenia)">
+  const unwatched = isUnwatched(item);
+  const unwatchedOverlay = unwatched 
+    ? `<div class="poster-overlay-unwatched" title="Ešte nebolo dopozerané (nikto nehlasoval)">
         <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
           <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -248,8 +254,8 @@ function rowHTML(item){
     : `<div class="poster-placeholder">${escapeHTML(item.title)}</div>`;
     
   const ratingInline = combined != null
-    ? `<span class="rating-inline" title="${escapeHTML(ratingTitle(item))}"><span class="rating-star">★</span>${combined}<small>%</small></span>`
-    : '';
+    ? `<span class="rating-inline" title="Priemer"><span class="rating-star">★</span>${combined}<small>%</small></span>`
+    : (voteChips(item) ? `<span class="vote-chips">${voteChips(item)}</span>` : '');
   const posterHTML = `<div class="poster-frame">${posterInner}${unwatchedOverlay}</div>`;
 
   const hasNotes = item.notes && item.notes.trim().length > 0;
@@ -271,7 +277,7 @@ function rowHTML(item){
   const metaLabel = metaString ? `<div class="card-meta">${escapeHTML(metaString)}</div>` : '';
 
   return `
-  <div class="row-card${unwatched ? ' unwatched' : ''}" data-id="${item.id}" tabindex="0" role="button" aria-label="Detail: ${escapeHTML(item.title)}${unwatched ? ' (nepozreté)' : ''}"${unwatched ? ' title="Nepozreté (bez hodnotenia)"' : ''}>
+  <div class="row-card${unwatched ? ' unwatched' : ''}" data-id="${item.id}" tabindex="0" role="button" aria-label="Detail: ${escapeHTML(item.title)}${unwatched ? ' (nepozreté)' : ''}"${unwatched ? ' title="Nepozreté"' : ''}>
     ${posterHTML}
     <div class="card-info">
       <div class="card-title" title="${escapeHTML(item.title)}">${escapeHTML(item.title)}</div>
@@ -293,7 +299,7 @@ function applyFiltersAndRender(){
   if(activeFilterCount() > 0){
     list = list.filter(d => {
       const f = activeFilters;
-      if(f.status.size && getCombinedRating(d) != null) return false;
+      if(f.status.size && !isUnwatched(d)) return false;
       if(f.provider.size && !f.provider.has(d.providerName)) return false;
       if(f.genre.size && !splitGenres(d.genre).some(g => f.genre.has(g))) return false;
       if(f.year.size && !f.year.has(d.year ? String(d.year) : '')) return false;
@@ -408,15 +414,35 @@ const detailNotes = document.getElementById('detailNotes');
 const inputB = document.getElementById('detailRatingB');
 const inputM = document.getElementById('detailRatingM');
 const avgEl = document.getElementById('detailRatingAvg');
-const legacyEl = document.getElementById('detailRatingLegacy');
+const noteEl = document.getElementById('detailRatingNote');
+const statusB = document.getElementById('voteStatusB');
+const statusM = document.getElementById('voteStatusM');
+const tickB = document.getElementById('voteTickB');
+const tickM = document.getElementById('voteTickM');
 let detailItem = null;
 let draft = { b: null, m: null };         // rozpracované B a M
-let touched = { b: false, m: false };     // či používateľ do poľa zasiahol
+const HID = 'hidden';                     // hlas existuje, ale číslo je skryté, kým nehlasujú obaja
+let detailOrig = { b: null, m: null };
 let detailLegacy = null;                  // staré spoločné hodnotenie bez rozdelenia na B a M
 
+function voteStatusHTML(voted){
+  return voted ? '<span class="vote-yes">' + CHECK_SVG + ' Hlasoval(a)</span>' : '<span class="vote-no">– Ešte nie</span>';
+}
 function renderDetailAvg(){
-  const legacyActive = detailLegacy != null && !touched.b && !touched.m;
-  const avg = averageOf(draft.m, draft.b);
+  // Zamknuté: čísla sa nikdy nezobrazia, len či človek hlasoval; priemer len keď hlasovali obaja.
+  const votedB = unlocked ? draft.b !== null : !!(detailItem && detailItem.votedB);
+  const votedM = unlocked ? draft.m !== null : !!(detailItem && detailItem.votedM);
+  tickB.hidden = !votedB; tickM.hidden = !votedM;
+  statusB.innerHTML = voteStatusHTML(votedB);
+  statusM.innerHTML = voteStatusHTML(votedM);
+  const legacyActive = detailLegacy != null && !votedB && !votedM;
+  const num = v => typeof v === 'number';
+  const unchanged = draft.b === detailOrig.b && draft.m === detailOrig.m;
+  let avg = null, pending = false;
+  if(unlocked){
+    if(num(draft.b) && num(draft.m)) avg = averageOf(draft.m, draft.b);
+    else if(votedB && votedM){ if(unchanged) avg = getCombinedRating(detailItem); else pending = true; }
+  } else if(votedB && votedM && detailItem) avg = getCombinedRating(detailItem);
   const shown = avg != null ? avg : (legacyActive ? detailLegacy : null);
   if(shown == null){
     avgEl.className = 'rating-avg-value empty';
@@ -425,9 +451,9 @@ function renderDetailAvg(){
     avgEl.className = 'rating-avg-value';
     avgEl.innerHTML = '<span class="rating-star">★</span>' + shown + '<small>%</small>';
   }
-  legacyEl.textContent = legacyActive
-    ? 'Doterajšie hodnotenie ' + detailLegacy + ' % bolo uložené bez rozdelenia na B a M. Keď zadáš B alebo M, nahradí ho priemer.'
-    : '';
+  noteEl.textContent = legacyActive
+    ? 'Doterajšie hodnotenie ' + detailLegacy + ' % bolo uložené bez rozdelenia na B a M. Keď zadáš B alebo M, nahradí ho priemer, ktorý sa zobrazí po hlasovaní oboch.'
+    : (avg == null ? (pending ? 'Priemer sa zobrazí po uložení.' : (unlocked ? 'Priemer sa zobrazí, keď budú vyplnené B aj M. Zadané číslo sa skryje, kým nezahlasujú obaja.' : 'Priemer sa zobrazí, keď zahlasujú obaja.')) : '');
 }
 
 function readRatingField(el){
@@ -438,14 +464,14 @@ function readRatingField(el){
 }
 function bindRatingField(el, key){
   el.addEventListener('input', ()=>{
-    touched[key] = true;
     const raw = el.value.trim();
     if(raw !== '' && Number(raw) > 100) el.value = '100';
     if(raw !== '' && Number(raw) < 0) el.value = '0';
-    draft[key] = readRatingField(el);
+    const v = readRatingField(el);
+    draft[key] = (v === null && detailOrig[key] === HID) ? HID : v;   // prázdne pole pri skrytom hlase = bez zmeny
     renderDetailAvg();
   });
-  el.addEventListener('blur', ()=>{ el.value = draft[key] == null ? '' : String(draft[key]); });
+  el.addEventListener('blur', ()=>{ el.value = typeof draft[key] === 'number' ? String(draft[key]) : ''; });
   el.addEventListener('keydown', e=>{ if(e.key === 'Enter'){ e.preventDefault(); el.blur(); } });
 }
 bindRatingField(inputB, 'b');
@@ -549,11 +575,14 @@ function openDetail(id){
   const item = data.find(d => d.id === id);
   if(!item) return;
   detailItem = item;
-  draft = { b: ratingNum(item.basa), m: ratingNum(item.milan) };
-  touched = { b: false, m: false };
-  detailLegacy = (draft.b == null && draft.m == null) ? ratingNum(item.rating) : null;
-  inputB.value = draft.b == null ? '' : String(draft.b);
-  inputM.value = draft.m == null ? '' : String(draft.m);
+  const hid = (voted, raw) => raw != null ? raw : (voted ? HID : null);
+  draft = unlocked ? { b: hid(item.votedB, ratingNum(item.basa)), m: hid(item.votedM, ratingNum(item.milan)) } : { b: null, m: null };
+  detailOrig = { ...draft };
+  inputB.placeholder = draft.b === HID ? '✓' : '–';
+  inputM.placeholder = draft.m === HID ? '✓' : '–';
+  detailLegacy = (!item.votedB && !item.votedM) ? ratingNum(item.rating) : null;
+  inputB.value = typeof draft.b === 'number' ? String(draft.b) : '';
+  inputM.value = typeof draft.m === 'number' ? String(draft.m) : '';
   inputB.readOnly = inputM.readOnly = !unlocked;
 
   const poster = safeImg(item.poster).replace(/\/w(92|154|185)\//, '/w500/');
@@ -592,8 +621,8 @@ function openDetail(id){
 
 function detailIsDirty(){
   if(!detailItem) return false;
-  const legacyTouched = detailLegacy != null && (touched.b || touched.m);
-  return draft.b !== ratingNum(detailItem.basa) || draft.m !== ratingNum(detailItem.milan) || legacyTouched ||
+  if(!unlocked) return false;
+  return draft.b !== detailOrig.b || draft.m !== detailOrig.m ||
     detailNotes.value.trim() !== (detailItem.notes || '').trim();
 }
 function closeDetail(force){
@@ -623,21 +652,26 @@ document.getElementById('detailDelete').addEventListener('click', ()=>{
 document.getElementById('detailSave').addEventListener('click', async ()=>{
   const item = detailItem;
   if(!item) return;
-  const orig = { b: ratingNum(item.basa), m: ratingNum(item.milan) };
-  const legacy = detailLegacy != null;
-  // pošle sa len to, čo sa zmenilo; staré spoločné hodnotenie sa nezmaže, kým nezadáš B alebo M
+  const orig = detailOrig;
+  // pošle sa len to, čo sa zmenilo; staré spoločné hodnotenie ostáva, kým nezadáš B alebo M
   const patch = { id: item.id, notes: detailNotes.value.trim() };
-  if(draft.b !== orig.b || (legacy && touched.b)) patch.basa = draft.b;
-  if(draft.m !== orig.m || (legacy && touched.m)) patch.milan = draft.m;
-  const prev = { basa: item.basa, milan: item.milan, rating: item.rating, notes: item.notes };
+  if(draft.b !== orig.b) patch.basa = draft.b;
+  if(draft.m !== orig.m) patch.milan = draft.m;
+  const prev = { basa: item.basa, milan: item.milan, rating: item.rating, notes: item.notes, votedB: item.votedB, votedM: item.votedM };
   item.notes = patch.notes;
   if('basa' in patch) item.basa = patch.basa;
   if('milan' in patch) item.milan = patch.milan;
-  if('basa' in patch || 'milan' in patch) item.rating = averageOf(ratingNum(item.milan), ratingNum(item.basa));
+  if('basa' in patch || 'milan' in patch){
+    item.votedB = patch.basa !== undefined ? patch.basa !== null : item.votedB;
+    item.votedM = patch.milan !== undefined ? patch.milan !== null : item.votedM;
+    item.rating = (item.votedB && item.votedM && ratingNum(item.basa) != null && ratingNum(item.milan) != null)
+      ? averageOf(ratingNum(item.milan), ratingNum(item.basa)) : null;
+  }
   closeDetail(true);
   applyFiltersAndRender();
   try{
     await apiPatch(patch);
+    if('basa' in patch || 'milan' in patch){ data = await apiGetAll(); applyFiltersAndRender(); }   // server vráti správny priemer a odhalené čísla
   }catch(err){
     console.error('Uloženie zlyhalo:', err);
     Object.assign(item, prev);
@@ -792,8 +826,8 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     year: item.year,
     genre: item.genre,
     rating: getCombinedRating(item),
-    ratingB: ratingNum(item.basa),
-    ratingM: ratingNum(item.milan),
+    ratingB: unlocked ? ratingNum(item.basa) : null,
+    ratingM: unlocked ? ratingNum(item.milan) : null,
     notes: item.notes || '',
     tmdbRating: item.public || null,
     provider: item.providerName || ''
